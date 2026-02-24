@@ -19,8 +19,10 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
+    "dev:demo": "vite --config vite.config.demo.ts",
     "build": "npm run build:lib",
     "build:lib": "vite build && tsc -p tsconfig.lib.json",
+    "build:demo": "vite build --config vite.config.demo.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
