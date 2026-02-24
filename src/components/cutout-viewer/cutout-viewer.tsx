@@ -439,10 +439,11 @@ function BBoxCutout({
   }
 
   /* --- Register / unregister -------------------------------------- */
+  const { x: bx, y: by, w: bw, h: bh } = defBounds
   useEffect(() => {
-    registry.registerCutout({ type: "bbox", id, bounds: defBounds, label })
+    registry.registerCutout({ type: "bbox", id, bounds: { x: bx, y: by, w: bw, h: bh }, label })
     return () => registry.unregisterCutout(id)
-  }, [id, defBounds, label, registry])
+  }, [id, bx, by, bw, bh, label, registry])
 
   /* --- Resolve per-cutout effect ---------------------------------- */
   const resolvedEffect = effectOverride
@@ -562,10 +563,11 @@ function PolygonCutout({
   }
 
   /* --- Register / unregister -------------------------------------- */
+  const pointsKey = defPoints.flat().join(",")
   useEffect(() => {
     registry.registerCutout({ type: "polygon", id, points: defPoints, label })
     return () => registry.unregisterCutout(id)
-  }, [id, defPoints, label, registry])
+  }, [id, pointsKey, label, registry]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* --- Resolve per-cutout effect ---------------------------------- */
   const resolvedEffect = effectOverride

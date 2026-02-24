@@ -89,6 +89,7 @@ export function useCutoutHitTest(
     }
 
     let cancelled = false
+    let builtStrategies: HitTestStrategy[] = []
 
     async function buildStrategies() {
       const strategies: HitTestStrategy[] = []
@@ -106,6 +107,7 @@ export function useCutoutHitTest(
       }
 
       if (!cancelled) {
+        builtStrategies = strategies
         strategiesRef.current = strategies
         setBoundsMap(newBoundsMap)
       }
@@ -114,7 +116,7 @@ export function useCutoutHitTest(
     buildStrategies()
     return () => {
       cancelled = true
-      for (const s of strategiesRef.current) {
+      for (const s of builtStrategies) {
         s.dispose?.()
       }
     }

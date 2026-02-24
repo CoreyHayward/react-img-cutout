@@ -235,10 +235,10 @@ export class PolygonHitTestStrategy implements HitTestStrategy {
     this.id = def.id
     this.points = def.points
     // Compute bounding rect from polygon points
-    let minX = 1,
-      minY = 1,
-      maxX = 0,
-      maxY = 0
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
     for (const [x, y] of def.points) {
       if (x < minX) minX = x
       if (x > maxX) maxX = x
