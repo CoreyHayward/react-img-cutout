@@ -506,15 +506,10 @@ function BBoxCutout({
                 top: `${bounds.y * 100}%`,
                 width: `${bounds.w * 100}%`,
                 height: `${bounds.h * 100}%`,
-                background: isActive
-                  ? "rgba(37, 99, 235, 0.15)"
-                  : "transparent",
-                border: isActive
-                  ? "2px solid rgba(37, 99, 235, 0.6)"
-                  : "2px solid transparent",
+                background: "rgba(37, 99, 235, 0.15)",
+                border: "2px solid rgba(37, 99, 235, 0.6)",
                 borderRadius: "4px",
                 boxSizing: "border-box",
-                transition: resolvedEffect.transition,
               }}
             />
           )}
@@ -635,10 +630,9 @@ function PolygonCutout({
             >
               <polygon
                 points={defPoints.map(([x, y]) => `${x},${y}`).join(" ")}
-                fill={isActive ? "rgba(37, 99, 235, 0.15)" : "transparent"}
-                stroke={isActive ? "rgba(37, 99, 235, 0.6)" : "transparent"}
+                fill="rgba(37, 99, 235, 0.15)"
+                stroke="rgba(37, 99, 235, 0.6)"
                 strokeWidth={0.003}
-                style={{ transition: resolvedEffect.transition }}
               />
             </svg>
           )}
