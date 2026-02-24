@@ -462,7 +462,9 @@ function BBoxCutout({
 
   let layerStyle: CSSProperties
   if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
-    layerStyle = resolvedEffect.cutoutIdle
+    // BBox indicators are hidden when idle — unlike image cutouts, they have
+    // no transparent-PNG content that blends naturally with the background.
+    layerStyle = { ...resolvedEffect.cutoutIdle, opacity: 0 }
   } else if (viewer.showAll || isActive) {
     layerStyle = resolvedEffect.cutoutActive
   } else {
@@ -581,7 +583,9 @@ function PolygonCutout({
 
   let layerStyle: CSSProperties
   if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
-    layerStyle = resolvedEffect.cutoutIdle
+    // Polygon indicators are hidden when idle — unlike image cutouts, they have
+    // no transparent-PNG content that blends naturally with the background.
+    layerStyle = { ...resolvedEffect.cutoutIdle, opacity: 0 }
   } else if (viewer.showAll || isActive) {
     layerStyle = resolvedEffect.cutoutActive
   } else {
