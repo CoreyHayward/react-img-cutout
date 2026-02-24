@@ -707,7 +707,185 @@ export const SingleCutout: Story = {
 }
 
 /* ------------------------------------------------------------------ */
-/*  15. Playground                                                     */
+/*  15. BBox Cutout                                                    */
+/* ------------------------------------------------------------------ */
+
+export const BBoxCutout: Story = {
+  name: "BBox Cutout",
+  render: (args) => (
+    <CutoutViewer {...args}>
+      <CutoutViewer.BBoxCutout
+        id="top-left"
+        bounds={{ x: 0.02, y: 0.05, w: 0.25, h: 0.2 }}
+        label="Top-Left Region"
+      >
+        <CutoutViewer.Overlay placement="bottom-center">
+          <Tag>BBox Region</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.BBoxCutout>
+      <CutoutViewer.Cutout {...CUTOUTS.woman} />
+      <CutoutViewer.Cutout {...CUTOUTS.man} />
+    </CutoutViewer>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`<CutoutViewer.BBoxCutout>` defines a rectangular region using normalized " +
+          "0-1 coordinates. Hit testing uses a simple point-in-rect (AABB) check. " +
+          "The default renderer shows a highlighted box on hover.",
+      },
+    },
+  },
+}
+
+/* ------------------------------------------------------------------ */
+/*  16. Polygon Cutout                                                 */
+/* ------------------------------------------------------------------ */
+
+export const PolygonCutout: Story = {
+  render: (args) => (
+    <CutoutViewer {...args}>
+      <CutoutViewer.PolygonCutout
+        id="ground"
+        points={[
+          [0.0, 0.85],
+          [1.0, 0.85],
+          [1.0, 1.0],
+          [0.0, 1.0],
+        ]}
+        label="Ground Area"
+      >
+        <CutoutViewer.Overlay placement="top-center">
+          <Tag>Ground Polygon</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.PolygonCutout>
+      <CutoutViewer.Cutout {...CUTOUTS.woman} />
+      <CutoutViewer.Cutout {...CUTOUTS.man} />
+    </CutoutViewer>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`<CutoutViewer.PolygonCutout>` defines an arbitrary polygon using normalized " +
+          "0-1 coordinate points. Hit testing uses ray-casting (point-in-polygon). " +
+          "The default renderer draws an SVG polygon.",
+      },
+    },
+  },
+}
+
+/* ------------------------------------------------------------------ */
+/*  17. Custom renderLayer                                             */
+/* ------------------------------------------------------------------ */
+
+export const CustomRenderLayer: Story = {
+  name: "Custom renderLayer",
+  render: (args) => (
+    <CutoutViewer {...args}>
+      <CutoutViewer.BBoxCutout
+        id="custom-box"
+        bounds={{ x: 0.1, y: 0.1, w: 0.35, h: 0.5 }}
+        label="Custom SVG Box"
+        renderLayer={({ isActive, bounds }) => (
+          <svg
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+            }}
+          >
+            <rect
+              x={`${bounds.x * 100}%`}
+              y={`${bounds.y * 100}%`}
+              width={`${bounds.w * 100}%`}
+              height={`${bounds.h * 100}%`}
+              fill={isActive ? "rgba(34, 197, 94, 0.12)" : "transparent"}
+              stroke={isActive ? "#22c55e" : "rgba(255,255,255,0.2)"}
+              strokeWidth={2}
+              strokeDasharray={isActive ? "none" : "6 4"}
+              rx={8}
+            />
+          </svg>
+        )}
+      >
+        <CutoutViewer.Overlay placement="top-center">
+          <Tag>Custom SVG</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.BBoxCutout>
+    </CutoutViewer>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The `renderLayer` prop replaces the default cutout visual with a custom " +
+          "renderer. This example draws a green SVG rect with dashed border when " +
+          "idle and a solid border when active. Works with all cutout types.",
+      },
+    },
+  },
+}
+
+/* ------------------------------------------------------------------ */
+/*  18. Mixed cutout types                                             */
+/* ------------------------------------------------------------------ */
+
+export const MixedCutoutTypes: Story = {
+  render: (args) => (
+    <CutoutViewer {...args}>
+      <CutoutViewer.Cutout {...CUTOUTS.woman}>
+        <CutoutViewer.Overlay placement="top-center">
+          <Tag>Image</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.Cutout>
+      <CutoutViewer.Cutout {...CUTOUTS.man}>
+        <CutoutViewer.Overlay placement="top-center">
+          <Tag>Image</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.Cutout>
+      <CutoutViewer.BBoxCutout
+        id="bbox-region"
+        bounds={{ x: 0.02, y: 0.05, w: 0.25, h: 0.2 }}
+        label="BBox Region"
+      >
+        <CutoutViewer.Overlay placement="bottom-center">
+          <Tag>BBox</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.BBoxCutout>
+      <CutoutViewer.PolygonCutout
+        id="polygon-region"
+        points={[
+          [0.0, 0.85],
+          [1.0, 0.85],
+          [1.0, 1.0],
+          [0.0, 1.0],
+        ]}
+        label="Ground Polygon"
+      >
+        <CutoutViewer.Overlay placement="top-center">
+          <Tag>Polygon</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.PolygonCutout>
+    </CutoutViewer>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "All three cutout types — image, bounding box, and polygon — can be mixed " +
+          "freely within the same `<CutoutViewer>`. Each uses its own hit-test strategy " +
+          "but shares the same hover/selection state and effect system.",
+      },
+    },
+  },
+}
+
+/* ------------------------------------------------------------------ */
+/*  19. Playground                                                     */
 /* ------------------------------------------------------------------ */
 
 export const Playground: Story = {
