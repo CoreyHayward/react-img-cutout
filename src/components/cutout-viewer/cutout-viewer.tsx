@@ -14,7 +14,7 @@ import {
 } from "react"
 import {
   useCutoutHitTest,
-  type CutoutImage,
+  type CutoutDefinition,
   type CutoutBounds,
 } from "./use-cutout-hit-test"
 import {
@@ -44,7 +44,7 @@ export type Placement =
 /* ------------------------------------------------------------------ */
 
 interface CutoutRegistryContextValue {
-  registerCutout: (id: string, src: string, label?: string) => void
+  registerCutout: (def: CutoutDefinition) => void
   unregisterCutout: (id: string) => void
 }
 
@@ -72,6 +72,33 @@ function useCutoutViewerContext() {
   const ctx = useContext(CutoutViewerContext)
   if (!ctx) throw new Error("Must be used inside <CutoutViewer>")
   return ctx
+}
+
+/* ------------------------------------------------------------------ */
+/*  RenderLayer props (for custom cutout rendering)                    */
+/* ------------------------------------------------------------------ */
+
+export interface RenderLayerProps {
+  isActive: boolean
+  isHovered: boolean
+  isSelected: boolean
+  bounds: CutoutBounds
+  effect: HoverEffect
+}
+
+/* ------------------------------------------------------------------ */
+/*  Internal serialization helper                                      */
+/* ------------------------------------------------------------------ */
+
+function serializeDefinition(def: CutoutDefinition): string {
+  switch (def.type) {
+    case "image":
+      return `image:${def.src}:${def.label ?? ""}`
+    case "bbox":
+      return `bbox:${def.bounds.x},${def.bounds.y},${def.bounds.w},${def.bounds.h}:${def.label ?? ""}`
+    case "polygon":
+      return `polygon:${def.points.flat().join(",")}:${def.label ?? ""}`
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -132,18 +159,18 @@ function CutoutViewerBase({
 
   /* --- Cutout registration ---------------------------------------- */
   const [cutoutMap, setCutoutMap] = useState<
-    Map<string, { src: string; label?: string }>
+    Map<string, CutoutDefinition>
   >(() => new Map())
 
   const registerCutout = useCallback(
-    (id: string, src: string, label?: string) => {
+    (def: CutoutDefinition) => {
       setCutoutMap((prev) => {
-        const existing = prev.get(id)
-        if (existing && existing.src === src && existing.label === label) {
+        const existing = prev.get(def.id)
+        if (existing && serializeDefinition(existing) === serializeDefinition(def)) {
           return prev // no change
         }
         const next = new Map(prev)
-        next.set(id, { src, label })
+        next.set(def.id, def)
         return next
       })
     },
@@ -164,18 +191,14 @@ function CutoutViewerBase({
     [registerCutout, unregisterCutout]
   )
 
-  // Derive CutoutImage[] from the registry for the hit-test hook
-  const cutouts: CutoutImage[] = useMemo(() => {
-    const arr: CutoutImage[] = []
-    cutoutMap.forEach((val, id) => {
-      arr.push({ id, src: val.src, label: val.label })
-    })
-    return arr
+  // Derive CutoutDefinition[] from the registry for the hit-test hook
+  const definitions: CutoutDefinition[] = useMemo(() => {
+    return Array.from(cutoutMap.values())
   }, [cutoutMap])
 
   /* --- Hit testing ------------------------------------------------ */
   const { activeId, selectedId, hoveredId, boundsMap, containerRef, containerProps } =
-    useCutoutHitTest(cutouts, enabled, alphaThreshold, hoverLeaveDelay)
+    useCutoutHitTest(definitions, enabled, alphaThreshold, hoverLeaveDelay)
 
   /* --- Callbacks via useEffect (correct ref-based approach) ------- */
   const prevHovRef = useRef<string | null>(null)
@@ -287,9 +310,11 @@ export interface CutoutProps {
   effect?: HoverEffectPreset | HoverEffect
   /** Children rendered inside this cutout's context (e.g. `<Overlay>`) */
   children?: ReactNode
+  /** Custom renderer for the cutout layer. When provided, replaces the default `<img>` rendering. */
+  renderLayer?: (props: RenderLayerProps) => ReactNode
 }
 
-function Cutout({ id, src, label, effect: effectOverride, children }: CutoutProps) {
+function Cutout({ id, src, label, effect: effectOverride, children, renderLayer }: CutoutProps) {
   const registry = useContext(CutoutRegistryContext)
   const viewer = useCutoutViewerContext()
 
@@ -299,7 +324,7 @@ function Cutout({ id, src, label, effect: effectOverride, children }: CutoutProp
 
   /* --- Register / unregister -------------------------------------- */
   useEffect(() => {
-    registry.registerCutout(id, src, label)
+    registry.registerCutout({ type: "image", id, src, label })
     return () => registry.unregisterCutout(id)
   }, [id, src, label, registry])
 
@@ -342,7 +367,7 @@ function Cutout({ id, src, label, effect: effectOverride, children }: CutoutProp
 
   return (
     <CutoutContext.Provider value={cutoutCtx}>
-      {/* Image layer */}
+      {/* Cutout layer */}
       <div
         data-cutout-id={id}
         style={{
@@ -354,17 +379,267 @@ function Cutout({ id, src, label, effect: effectOverride, children }: CutoutProp
           ...layerStyle,
         }}
       >
-        <img
-          src={src}
-          alt={label || id}
-          draggable={false}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "fill",
-            userSelect: "none",
-          }}
-        />
+        {renderLayer
+          ? renderLayer({ isActive, isHovered, isSelected, bounds, effect: resolvedEffect })
+          : (
+            <img
+              src={src}
+              alt={label || id}
+              draggable={false}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "fill",
+                userSelect: "none",
+              }}
+            />
+          )}
+      </div>
+
+      {/* Children (overlay content) rendered on top */}
+      {children}
+    </CutoutContext.Provider>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  BBoxCutout sub-component                                           */
+/* ------------------------------------------------------------------ */
+
+export interface BBoxCutoutProps {
+  /** Unique identifier for this cutout */
+  id: string
+  /** Normalized 0-1 bounding box coordinates */
+  bounds: { x: number; y: number; w: number; h: number }
+  /** Human-readable label */
+  label?: string
+  /** Override the viewer-level hover effect for this specific cutout */
+  effect?: HoverEffectPreset | HoverEffect
+  /** Children rendered inside this cutout's context (e.g. `<Overlay>`) */
+  children?: ReactNode
+  /** Custom renderer for the cutout layer. When provided, replaces the default rendering. */
+  renderLayer?: (props: RenderLayerProps) => ReactNode
+}
+
+function BBoxCutout({
+  id,
+  bounds: defBounds,
+  label,
+  effect: effectOverride,
+  children,
+  renderLayer,
+}: BBoxCutoutProps) {
+  const registry = useContext(CutoutRegistryContext)
+  const viewer = useCutoutViewerContext()
+
+  if (!registry) {
+    throw new Error(
+      "<CutoutViewer.BBoxCutout> must be used inside <CutoutViewer>"
+    )
+  }
+
+  /* --- Register / unregister -------------------------------------- */
+  useEffect(() => {
+    registry.registerCutout({ type: "bbox", id, bounds: defBounds, label })
+    return () => registry.unregisterCutout(id)
+  }, [id, defBounds, label, registry])
+
+  /* --- Resolve per-cutout effect ---------------------------------- */
+  const resolvedEffect = effectOverride
+    ? typeof effectOverride === "string"
+      ? (hoverEffects[effectOverride] ?? viewer.effect)
+      : effectOverride
+    : viewer.effect
+
+  /* --- Compute state ---------------------------------------------- */
+  const isActive = viewer.activeId === id
+  const isHovered = viewer.hoveredId === id
+  const isSelected = viewer.selectedId === id
+
+  const defaultBounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
+  const bounds = viewer.boundsMap[id] ?? defaultBounds
+
+  let layerStyle: CSSProperties
+  if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
+    layerStyle = resolvedEffect.cutoutIdle
+  } else if (viewer.showAll || isActive) {
+    layerStyle = resolvedEffect.cutoutActive
+  } else {
+    layerStyle = resolvedEffect.cutoutInactive
+  }
+
+  const cutoutCtx: CutoutContextValue = useMemo(
+    () => ({
+      id,
+      label,
+      bounds,
+      isActive,
+      isHovered,
+      isSelected,
+      effect: resolvedEffect,
+    }),
+    [id, label, bounds, isActive, isHovered, isSelected, resolvedEffect]
+  )
+
+  return (
+    <CutoutContext.Provider value={cutoutCtx}>
+      {/* Cutout layer */}
+      <div
+        data-cutout-id={id}
+        style={{
+          pointerEvents: "none",
+          position: "absolute",
+          inset: 0,
+          zIndex: isActive ? 20 : 10,
+          transition: resolvedEffect.transition,
+          ...layerStyle,
+        }}
+      >
+        {renderLayer
+          ? renderLayer({ isActive, isHovered, isSelected, bounds, effect: resolvedEffect })
+          : (
+            <div
+              style={{
+                position: "absolute",
+                left: `${bounds.x * 100}%`,
+                top: `${bounds.y * 100}%`,
+                width: `${bounds.w * 100}%`,
+                height: `${bounds.h * 100}%`,
+                background: isActive
+                  ? "rgba(37, 99, 235, 0.15)"
+                  : "transparent",
+                border: isActive
+                  ? "2px solid rgba(37, 99, 235, 0.6)"
+                  : "2px solid transparent",
+                borderRadius: "4px",
+                boxSizing: "border-box",
+                transition: resolvedEffect.transition,
+              }}
+            />
+          )}
+      </div>
+
+      {/* Children (overlay content) rendered on top */}
+      {children}
+    </CutoutContext.Provider>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  PolygonCutout sub-component                                        */
+/* ------------------------------------------------------------------ */
+
+export interface PolygonCutoutProps {
+  /** Unique identifier for this cutout */
+  id: string
+  /** Array of [x, y] normalized 0-1 points forming a closed path */
+  points: [number, number][]
+  /** Human-readable label */
+  label?: string
+  /** Override the viewer-level hover effect for this specific cutout */
+  effect?: HoverEffectPreset | HoverEffect
+  /** Children rendered inside this cutout's context (e.g. `<Overlay>`) */
+  children?: ReactNode
+  /** Custom renderer for the cutout layer. When provided, replaces the default SVG rendering. */
+  renderLayer?: (props: RenderLayerProps) => ReactNode
+}
+
+function PolygonCutout({
+  id,
+  points: defPoints,
+  label,
+  effect: effectOverride,
+  children,
+  renderLayer,
+}: PolygonCutoutProps) {
+  const registry = useContext(CutoutRegistryContext)
+  const viewer = useCutoutViewerContext()
+
+  if (!registry) {
+    throw new Error(
+      "<CutoutViewer.PolygonCutout> must be used inside <CutoutViewer>"
+    )
+  }
+
+  /* --- Register / unregister -------------------------------------- */
+  useEffect(() => {
+    registry.registerCutout({ type: "polygon", id, points: defPoints, label })
+    return () => registry.unregisterCutout(id)
+  }, [id, defPoints, label, registry])
+
+  /* --- Resolve per-cutout effect ---------------------------------- */
+  const resolvedEffect = effectOverride
+    ? typeof effectOverride === "string"
+      ? (hoverEffects[effectOverride] ?? viewer.effect)
+      : effectOverride
+    : viewer.effect
+
+  /* --- Compute state ---------------------------------------------- */
+  const isActive = viewer.activeId === id
+  const isHovered = viewer.hoveredId === id
+  const isSelected = viewer.selectedId === id
+
+  const defaultBounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
+  const bounds = viewer.boundsMap[id] ?? defaultBounds
+
+  let layerStyle: CSSProperties
+  if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
+    layerStyle = resolvedEffect.cutoutIdle
+  } else if (viewer.showAll || isActive) {
+    layerStyle = resolvedEffect.cutoutActive
+  } else {
+    layerStyle = resolvedEffect.cutoutInactive
+  }
+
+  const cutoutCtx: CutoutContextValue = useMemo(
+    () => ({
+      id,
+      label,
+      bounds,
+      isActive,
+      isHovered,
+      isSelected,
+      effect: resolvedEffect,
+    }),
+    [id, label, bounds, isActive, isHovered, isSelected, resolvedEffect]
+  )
+
+  return (
+    <CutoutContext.Provider value={cutoutCtx}>
+      {/* Cutout layer */}
+      <div
+        data-cutout-id={id}
+        style={{
+          pointerEvents: "none",
+          position: "absolute",
+          inset: 0,
+          zIndex: isActive ? 20 : 10,
+          transition: resolvedEffect.transition,
+          ...layerStyle,
+        }}
+      >
+        {renderLayer
+          ? renderLayer({ isActive, isHovered, isSelected, bounds, effect: resolvedEffect })
+          : (
+            <svg
+              viewBox="0 0 1 1"
+              preserveAspectRatio="none"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              <polygon
+                points={defPoints.map(([x, y]) => `${x},${y}`).join(" ")}
+                fill={isActive ? "rgba(37, 99, 235, 0.15)" : "transparent"}
+                stroke={isActive ? "rgba(37, 99, 235, 0.6)" : "transparent"}
+                strokeWidth={0.003}
+                style={{ transition: resolvedEffect.transition }}
+              />
+            </svg>
+          )}
       </div>
 
       {/* Children (overlay content) rendered on top */}
@@ -495,10 +770,14 @@ export function CutoutOverlay({
 
 type CutoutViewerComponent = ((props: CutoutViewerProps) => ReactElement) & {
   Cutout: typeof Cutout
+  BBoxCutout: typeof BBoxCutout
+  PolygonCutout: typeof PolygonCutout
   Overlay: typeof CutoutOverlay
 }
 
 export const CutoutViewer = CutoutViewerBase as CutoutViewerComponent
 
 CutoutViewer.Cutout = Cutout
+CutoutViewer.BBoxCutout = BBoxCutout
+CutoutViewer.PolygonCutout = PolygonCutout
 CutoutViewer.Overlay = CutoutOverlay
