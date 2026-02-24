@@ -25,25 +25,37 @@ export interface CutoutBounds {
 
 interface AlphaMap {
   id: string
-  canvas: HTMLCanvasElement
+  /** Pre-extracted alpha channel — one byte per pixel */
+  alpha: Uint8Array
   width: number
   height: number
   bounds: CutoutBounds
 }
 
 /**
- * Scans an offscreen canvas to find the bounding box of pixels whose alpha
- * exceeds the given threshold. Returns normalized (0-1) coordinates.
+ * Extracts the alpha channel from RGBA image data into a compact Uint8Array
+ * (one byte per pixel). This avoids keeping the full canvas alive and enables
+ * O(1) lookups during hit testing instead of per-event getImageData calls.
+ */
+function extractAlpha(data: Uint8ClampedArray, pixelCount: number): Uint8Array {
+  const alpha = new Uint8Array(pixelCount)
+  for (let i = 0; i < pixelCount; i++) {
+    alpha[i] = data[i * 4 + 3]
+  }
+  return alpha
+}
+
+/**
+ * Scans a pre-extracted alpha buffer to find the bounding box of pixels whose
+ * alpha exceeds the given threshold. Returns normalized (0-1) coordinates.
  */
 function computeBounds(
-  ctx: CanvasRenderingContext2D,
+  alpha: Uint8Array,
   w: number,
   h: number,
   threshold: number
 ): CutoutBounds {
   if (w <= 0 || h <= 0) return { x: 0, y: 0, w: 1, h: 1 }
-  const imageData = ctx.getImageData(0, 0, w, h)
-  const data = imageData.data
   let minX = w,
     minY = h,
     maxX = 0,
@@ -52,8 +64,7 @@ function computeBounds(
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const alpha = data[(y * w + x) * 4 + 3]
-      if (alpha > threshold) {
+      if (alpha[y * w + x] > threshold) {
         if (x < minX) minX = x
         if (x > maxX) maxX = x
         if (y < minY) minY = y
@@ -148,10 +159,19 @@ export function useCutoutHitTest(
         if (!ctx) continue
 
         let bounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
+        let alphaBuffer: Uint8Array
         try {
           ctx.drawImage(img, 0, 0)
+          const imageData = ctx.getImageData(
+            0,
+            0,
+            img.naturalWidth,
+            img.naturalHeight
+          )
+          const pixelCount = img.naturalWidth * img.naturalHeight
+          alphaBuffer = extractAlpha(imageData.data, pixelCount)
           bounds = computeBounds(
-            ctx,
+            alphaBuffer,
             img.naturalWidth,
             img.naturalHeight,
             clampThreshold
@@ -159,11 +179,12 @@ export function useCutoutHitTest(
         } catch {
           // Ignore images we cannot read (e.g. CORS-tainted canvas) and
           // leave their bounds as the full image fallback.
+          alphaBuffer = new Uint8Array(0)
         }
 
         maps.push({
           id: cutout.id,
-          canvas: offscreen,
+          alpha: alphaBuffer,
           width: img.naturalWidth,
           height: img.naturalHeight,
           bounds,
@@ -189,20 +210,19 @@ export function useCutoutHitTest(
       const maps = alphaMapsRef.current
       for (let i = maps.length - 1; i >= 0; i--) {
         const map = maps[i]
+        // Fast-reject: skip pixel lookup if pointer is outside bounding box
+        const b = map.bounds
+        if (nx < b.x || nx > b.x + b.w || ny < b.y || ny > b.y + b.h) {
+          continue
+        }
         const px = Math.min(map.width - 1, Math.max(0, Math.floor(nx * map.width)))
         const py = Math.min(
           map.height - 1,
           Math.max(0, Math.floor(ny * map.height))
         )
-        const ctx = map.canvas.getContext("2d", { willReadFrequently: true })
-        if (!ctx) continue
-        try {
-          const pixel = ctx.getImageData(px, py, 1, 1).data
-          if (pixel[3] > clampThreshold) {
-            return map.id
-          }
-        } catch {
-          continue
+        // O(1) array lookup instead of per-event getImageData call
+        if (map.alpha[py * map.width + px] > clampThreshold) {
+          return map.id
         }
       }
       return null
@@ -211,7 +231,7 @@ export function useCutoutHitTest(
   )
 
   const getNormalizedPos = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (e: React.PointerEvent<HTMLDivElement>) => {
       const container = containerRef.current
       if (!container) return null
       const rect = container.getBoundingClientRect()
@@ -223,8 +243,8 @@ export function useCutoutHitTest(
     []
   )
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
       if (!enabled) return
       const pos = getNormalizedPos(e)
       if (!pos) {
@@ -251,12 +271,12 @@ export function useCutoutHitTest(
     [enabled, getNormalizedPos, hitTestAt, scheduleHoverClear, cancelHoverClear]
   )
 
-  const handleMouseLeave = useCallback(() => {
+  const handlePointerLeave = useCallback(() => {
     scheduleHoverClear()
   }, [scheduleHoverClear])
 
   const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (e: React.PointerEvent<HTMLDivElement>) => {
       if (!enabled) return
       const pos = getNormalizedPos(e)
       if (!pos) {
@@ -288,8 +308,8 @@ export function useCutoutHitTest(
     boundsMap: effectiveBoundsMap,
     containerRef,
     containerProps: {
-      onMouseMove: handleMouseMove,
-      onMouseLeave: handleMouseLeave,
+      onPointerMove: handlePointerMove,
+      onPointerLeave: handlePointerLeave,
       onClick: handleClick,
     },
   }
