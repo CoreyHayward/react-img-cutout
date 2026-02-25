@@ -36,6 +36,13 @@ export {
   liftEffect,
   subtleEffect,
   traceEffect,
+  shimmerEffect,
+  defineKeyframes,
 } from "./hover-effects"
-export type { HoverEffect, HoverEffectPreset, GeometryStyle } from "./hover-effects"
+export type {
+  HoverEffect,
+  HoverEffectPreset,
+  GeometryStyle,
+  KeyframeAnimation,
+} from "./hover-effects"
 

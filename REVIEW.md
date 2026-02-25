@@ -349,7 +349,7 @@ Here's how the proposed abstraction would map to different use cases:
 
 | Use Case | Cutout Type | Hit Test | Renderer | Existing Support |
 |---|---|---|---|---|
-| Apple Visual Look Up | `image` | Alpha channel | `<img>` overlay | Yes |
+| Visual Look Up | `image` | Alpha channel | `<img>` overlay | Yes |
 | Object detection boxes | `bbox` | Point-in-rect | `<div>` or custom | **No** |
 | Segmentation masks | `image` | Alpha channel | `<img>` or `<canvas>` | Partial |
 | Geographic regions | `polygon` | Ray cast | SVG `<polygon>` | **No** |

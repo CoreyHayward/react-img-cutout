@@ -164,7 +164,8 @@ as segmentation masks or hand-drawn annotations.
 - `useCutout()`
   - Read nearest cutout state (`id`, `bounds`, `isActive`, `isHovered`, `isSelected`, `effect`)
 - `hoverEffects`
-  - Built-in presets: `elevate`, `glow`, `lift`, `subtle`, `trace`
+  - Built-in presets: `elevate`, `glow`, `lift`, `subtle`, `trace`, `shimmer`
+- `defineKeyframes(name, css)` — helper for declaring CSS `@keyframes` in custom effects
 
 ## How It Works
 
@@ -189,7 +190,20 @@ as segmentation masks or hand-drawn annotations.
 
 ## Effects
 
-You can pass a preset name or a fully custom `HoverEffect` object.
+Pass a preset name or a fully custom `HoverEffect` object to the `effect` prop.
+
+### Built-in presets
+
+| Preset | Description |
+|--------|-------------|
+| `elevate` | Lifts the hovered cutout with a blue glow and deep shadow |
+| `glow` | Warm glow around the hovered cutout, no lift |
+| `lift` | Strong lift with deep shadow, no color glow |
+| `subtle` | Minimal — dims non-hovered cutouts with no animation |
+| `trace` | A white dash continuously traces the cutout border |
+| `shimmer` | style brightness flash that sweeps over the hovered subject |
+
+### Custom static effects
 
 ```tsx
 import { CutoutViewer, type HoverEffect } from "react-img-cutout"
@@ -204,6 +218,38 @@ const customEffect: HoverEffect = {
   cutoutIdle: { transform: "scale(1)", opacity: 1 },
 }
 ```
+
+### Custom animated effects
+
+Use `defineKeyframes` to declare CSS `@keyframes` that the viewer injects
+automatically. Reference the keyframe `name` in any `animation` property.
+
+```tsx
+import { defineKeyframes, type HoverEffect } from "react-img-cutout"
+
+const pulse = defineKeyframes("my-pulse", `
+  0%, 100% { transform: scale(1);    filter: brightness(1);    }
+  50%      { transform: scale(1.06); filter: brightness(1.15); }
+`)
+
+const pulseEffect: HoverEffect = {
+  name: "pulse",
+  transition: "all 0.4s ease",
+  keyframes: [pulse],
+  mainImageHovered: { filter: "brightness(0.3)" },
+  vignetteStyle: { background: "rgba(0,0,0,0.4)" },
+  cutoutActive: {
+    animation: `${pulse.name} 1.2s ease-in-out infinite`,
+    opacity: 1,
+  },
+  cutoutInactive: { opacity: 0.3 },
+  cutoutIdle: { opacity: 1 },
+}
+```
+
+Geometry cutouts (BBox / Polygon) also support `strokeDasharray` and
+`animation` on their `geometryActive` style for SVG-level animations
+like the built-in trace effect.
 
 ## Local Development
 

@@ -19,6 +19,7 @@ import {
 } from "./use-cutout-hit-test"
 import {
   hoverEffects,
+  ensureEffectKeyframes,
   type HoverEffect,
   type HoverEffectPreset,
   type GeometryStyle,
@@ -167,6 +168,11 @@ function CutoutViewerBase({
     typeof effectProp === "string"
       ? (hoverEffects[effectProp] ?? hoverEffects.elevate)
       : effectProp
+
+  /* --- Inject any keyframes the active effect declares ------------ */
+  useEffect(() => {
+    ensureEffectKeyframes(resolvedEffect)
+  }, [resolvedEffect])
 
   /* --- Cutout registration ---------------------------------------- */
   const [cutoutMap, setCutoutMap] = useState<
@@ -527,21 +533,38 @@ function BBoxCutout({
         {renderLayer
           ? renderLayer({ isActive, isHovered, isSelected, bounds, effect: resolvedEffect })
           : (
-            <div
+            <svg
+              viewBox="0 0 1 1"
+              preserveAspectRatio="none"
               style={{
                 position: "absolute",
-                left: `${bounds.x * 100}%`,
-                top: `${bounds.y * 100}%`,
-                width: `${bounds.w * 100}%`,
-                height: `${bounds.h * 100}%`,
-                background: geo.fill,
-                border: `${geo.strokeWidth ?? 2}px solid ${geo.stroke}`,
-                borderRadius: "4px",
-                boxSizing: "border-box",
-                boxShadow: geo.glow ?? "none",
-                transition: resolvedEffect.transition,
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                overflow: "visible",
+                filter: geo.glow
+                  ? `drop-shadow(${geo.glow.split(",")[0]?.trim() ?? ""})`
+                  : "none",
               }}
-            />
+            >
+              <rect
+                x={bounds.x}
+                y={bounds.y}
+                width={bounds.w}
+                height={bounds.h}
+                rx={0.004}
+                fill={geo.fill}
+                stroke={geo.stroke}
+                strokeWidth={(geo.strokeWidth ?? 2) * 0.0015}
+                strokeLinecap={geo.strokeDasharray ? "round" : undefined}
+                strokeDasharray={geo.strokeDasharray}
+                pathLength={geo.strokeDasharray ? 1 : undefined}
+                style={{
+                  transition: resolvedEffect.transition,
+                  animation: geo.animation,
+                }}
+              />
+            </svg>
           )}
       </div>
 
@@ -672,6 +695,7 @@ function PolygonCutout({
                 inset: 0,
                 width: "100%",
                 height: "100%",
+                overflow: "visible",
                 filter: geo.glow
                   ? `drop-shadow(${geo.glow.split(",")[0]?.trim() ?? ""})`
                   : "none",
@@ -682,7 +706,14 @@ function PolygonCutout({
                 fill={geo.fill}
                 stroke={geo.stroke}
                 strokeWidth={(geo.strokeWidth ?? 2) * 0.0015}
-                style={{ transition: resolvedEffect.transition }}
+                strokeLinejoin="round"
+                strokeLinecap={geo.strokeDasharray ? "round" : undefined}
+                strokeDasharray={geo.strokeDasharray}
+                pathLength={geo.strokeDasharray ? 1 : undefined}
+                style={{
+                  transition: resolvedEffect.transition,
+                  animation: geo.animation,
+                }}
               />
             </svg>
           )}

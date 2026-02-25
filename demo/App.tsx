@@ -17,7 +17,7 @@ const CUTOUTS = {
   man: { id: "man", src: "/demo-images/man.png", label: "Man" },
 } as const
 
-const EFFECTS: HoverEffectPreset[] = ["elevate", "glow", "lift", "subtle", "trace"]
+const EFFECTS: HoverEffectPreset[] = ["elevate", "glow", "lift", "subtle", "trace", "shimmer"]
 
 const PLACEMENTS: Placement[] = [
   "top-left",
@@ -47,7 +47,7 @@ const DEMO_MODES: { value: DemoMode; label: string }[] = [
 
 export function App() {
   // Controls state
-  const [effect, setEffect] = useState<HoverEffectPreset>("apple")
+  const [effect, setEffect] = useState<HoverEffectPreset>("elevate")
   const [enabled, setEnabled] = useState(true)
   const [showAll, setShowAll] = useState(false)
   const [showOverlays, setShowOverlays] = useState(false)
@@ -335,7 +335,7 @@ export function App() {
             {/* Reset */}
             <button
               onClick={() => {
-                setEffect("apple")
+                setEffect("elevate")
                 setEnabled(true)
                 setShowAll(false)
                 setShowOverlays(false)
