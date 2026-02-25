@@ -26,7 +26,7 @@ export function ProductHero() {
     <CutoutViewer
       mainImage="/images/main.png"
       mainImageAlt="Product scene"
-      effect="apple"
+      effect="elevate"
       onSelect={(id) => console.log("selected:", id)}
     >
       <CutoutViewer.Cutout
@@ -61,7 +61,7 @@ export function ProductHero() {
 - `useCutout()`
   - Read nearest cutout state (`id`, `bounds`, `isActive`, `isHovered`, `isSelected`, `effect`)
 - `hoverEffects`
-  - Built-in presets: `apple`, `glow`, `lift`, `subtle`, `trace`
+  - Built-in presets: `elevate`, `glow`, `lift`, `subtle`, `trace`
 
 ## How It Works
 

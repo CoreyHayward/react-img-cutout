@@ -41,7 +41,7 @@ cutout individually.
 - **Composable API** — declare cutouts as \`<CutoutViewer.Cutout>\` children,
   each with its own optional \`<CutoutViewer.Overlay>\`.
 - **Pixel-accurate hit testing** — only opaque pixels register as hover targets.
-- **Five built-in effect presets** — \`apple\`, \`glow\`, \`lift\`, \`subtle\`, \`trace\`.
+- **Five built-in effect presets** — \`elevate\`, \`glow\`, \`lift\`, \`subtle\`, \`trace\`.
 - **Per-cutout effect overrides** — each cutout can use a different effect.
 - **Fully custom effects** — pass your own \`HoverEffect\` object.
 - **Overlay placement** — position overlays relative to the cutout bounding box
@@ -53,7 +53,7 @@ cutout individually.
   },
   args: {
     mainImage: MAIN_IMAGE,
-    effect: "apple",
+    effect: "elevate",
     enabled: true,
     showAll: false,
     alphaThreshold: 30,
@@ -61,10 +61,10 @@ cutout individually.
   argTypes: {
     effect: {
       control: "select",
-      options: ["apple", "glow", "lift", "subtle", "trace"],
+      options: ["elevate", "glow", "lift", "subtle", "trace"],
       description:
         "A built-in preset name **or** a custom `HoverEffect` object.",
-      table: { defaultValue: { summary: "apple" } },
+      table: { defaultValue: { summary: "elevate" } },
     },
     enabled: {
       control: "boolean",
@@ -106,11 +106,11 @@ const DefaultChildren = () => (
 )
 
 /* ------------------------------------------------------------------ */
-/*  1. Default — Apple effect                                          */
+/*  1. Default — Elevate effect                                       */
 /* ------------------------------------------------------------------ */
 
-export const AppleEffect: Story = {
-  name: "Apple Effect (default)",
+export const ElevateEffect: Story = {
+  name: "Elevate Effect (default)",
   render: (args) => (
     <CutoutViewer {...args}>
       <DefaultChildren />
@@ -120,7 +120,7 @@ export const AppleEffect: Story = {
     docs: {
       description: {
         story:
-          "The default **Apple Photos Visual Look Up** style. The hovered subject lifts " +
+          "The default **Elevate** effect. The hovered subject lifts " +
           "and receives a blue glow while the background dims and desaturates. " +
           "Click a subject to lock the selection; click again to release.",
       },
@@ -506,7 +506,7 @@ export const CustomEffect: Story = {
 export const PerCutoutEffect: Story = {
   name: "Per-Cutout Effect Override",
   render: (args) => (
-    <CutoutViewer {...args} effect="apple">
+    <CutoutViewer {...args} effect="elevate">
       <CutoutViewer.Cutout {...CUTOUTS.woman} effect="glow">
         <CutoutViewer.Overlay placement="top-center">
           <div

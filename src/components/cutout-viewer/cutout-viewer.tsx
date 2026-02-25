@@ -151,7 +151,7 @@ export interface CutoutViewerProps {
 function CutoutViewerBase({
   mainImage,
   mainImageAlt = "Main image",
-  effect: effectProp = "apple",
+  effect: effectProp = "elevate",
   enabled = true,
   showAll = false,
   alphaThreshold = 30,
@@ -165,7 +165,7 @@ function CutoutViewerBase({
 }: CutoutViewerProps) {
   const resolvedEffect =
     typeof effectProp === "string"
-      ? (hoverEffects[effectProp] ?? hoverEffects.apple)
+      ? (hoverEffects[effectProp] ?? hoverEffects.elevate)
       : effectProp
 
   /* --- Cutout registration ---------------------------------------- */

@@ -17,7 +17,7 @@ const CUTOUTS = {
   man: { id: "man", src: "/demo-images/man.png", label: "Man" },
 } as const
 
-const EFFECTS: HoverEffectPreset[] = ["apple", "glow", "lift", "subtle", "trace"]
+const EFFECTS: HoverEffectPreset[] = ["elevate", "glow", "lift", "subtle", "trace"]
 
 const PLACEMENTS: Placement[] = [
   "top-left",

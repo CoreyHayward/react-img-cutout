@@ -31,7 +31,7 @@ export {
 
 export {
   hoverEffects,
-  appleEffect,
+  elevateEffect,
   glowEffect,
   liftEffect,
   subtleEffect,

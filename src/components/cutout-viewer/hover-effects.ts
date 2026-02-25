@@ -52,11 +52,11 @@ export interface HoverEffect {
 const SPRING = "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)"
 
 /**
- * Apple Photos-style "Visual Look Up" effect.
- * Hovered item lifts, glows blue, background dims and desaturates.
+ * Elevate effect — the hovered item lifts, glows blue, background dims and desaturates.
+ * Inspired by Visual Look Up interactions.
  */
-export const appleEffect: HoverEffect = {
-  name: "apple",
+export const elevateEffect: HoverEffect = {
+  name: "elevate",
   transition: SPRING,
   mainImageHovered: {
     filter: "brightness(0.45) saturate(0.7)",
@@ -236,7 +236,8 @@ export const subtleEffect: HoverEffect = {
 }
 
 /**
- * Placeholder for a future trace/outline border effect.
+ * Trace / outline border effect — emphasises the shape outline with a bright
+ * animated stroke and minimal fill, giving a "tracing" feel around geometry.
  */
 export const traceEffect: HoverEffect = {
   name: "trace",
@@ -263,11 +264,27 @@ export const traceEffect: HoverEffect = {
     filter: "none",
     opacity: 1,
   },
+  geometryActive: {
+    fill: "rgba(255, 255, 255, 0.04)",
+    stroke: "rgba(255, 255, 255, 0.9)",
+    strokeWidth: 2.5,
+    glow: "0 0 14px rgba(255, 255, 255, 0.35), 0 0 40px rgba(255, 255, 255, 0.1)",
+  },
+  geometryInactive: {
+    fill: "transparent",
+    stroke: "rgba(255, 255, 255, 0.15)",
+    strokeWidth: 1,
+  },
+  geometryIdle: {
+    fill: "transparent",
+    stroke: "transparent",
+    strokeWidth: 1,
+  },
 }
 
 /** Built-in preset map for convenience */
 export const hoverEffects = {
-  apple: appleEffect,
+  elevate: elevateEffect,
   glow: glowEffect,
   lift: liftEffect,
   subtle: subtleEffect,
