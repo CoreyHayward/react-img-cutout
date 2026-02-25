@@ -21,6 +21,7 @@ import {
   hoverEffects,
   type HoverEffect,
   type HoverEffectPreset,
+  type GeometryStyle,
 } from "./hover-effects"
 import { CutoutContext, type CutoutContextValue } from "./cutout-context"
 
@@ -99,6 +100,16 @@ function serializeDefinition(def: CutoutDefinition): string {
     case "polygon":
       return `polygon:${def.points.flat().join(",")}:${def.label ?? ""}`
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helper: strip `filter` from a CSSProperties object                 */
+/* ------------------------------------------------------------------ */
+
+function stripFilter(style: CSSProperties): CSSProperties {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { filter: _, ...rest } = style
+  return rest
 }
 
 /* ------------------------------------------------------------------ */
@@ -460,16 +471,31 @@ function BBoxCutout({
   const defaultBounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
   const bounds = viewer.boundsMap[id] ?? defaultBounds
 
+  // For geometry cutouts, use geometry-specific styles and strip the wrapper
+  // filter (drop-shadow doesn't produce good visuals on geometric shapes).
+  let geometryStyle: GeometryStyle | undefined
   let layerStyle: CSSProperties
   if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
     // BBox indicators are hidden when idle — unlike image cutouts, they have
     // no transparent-PNG content that blends naturally with the background.
-    layerStyle = { ...resolvedEffect.cutoutIdle, opacity: 0 }
+    layerStyle = { ...resolvedEffect.cutoutIdle, filter: "none", opacity: 0 }
+    geometryStyle = resolvedEffect.geometryIdle
   } else if (viewer.showAll || isActive) {
-    layerStyle = resolvedEffect.cutoutActive
+    // Keep transform & opacity from cutoutActive but strip filter for geometry
+    layerStyle = stripFilter(resolvedEffect.cutoutActive)
+    geometryStyle = resolvedEffect.geometryActive
   } else {
-    layerStyle = resolvedEffect.cutoutInactive
+    layerStyle = stripFilter(resolvedEffect.cutoutInactive)
+    geometryStyle = resolvedEffect.geometryInactive
   }
+
+  // Fallback geometry style if the effect doesn't define one
+  const defaultGeometry: GeometryStyle = {
+    fill: "rgba(37, 99, 235, 0.15)",
+    stroke: "rgba(37, 99, 235, 0.6)",
+    strokeWidth: 2,
+  }
+  const geo = geometryStyle ?? defaultGeometry
 
   const cutoutCtx: CutoutContextValue = useMemo(
     () => ({
@@ -508,10 +534,12 @@ function BBoxCutout({
                 top: `${bounds.y * 100}%`,
                 width: `${bounds.w * 100}%`,
                 height: `${bounds.h * 100}%`,
-                background: "rgba(37, 99, 235, 0.15)",
-                border: "2px solid rgba(37, 99, 235, 0.6)",
+                background: geo.fill,
+                border: `${geo.strokeWidth ?? 2}px solid ${geo.stroke}`,
                 borderRadius: "4px",
                 boxSizing: "border-box",
+                boxShadow: geo.glow ?? "none",
+                transition: resolvedEffect.transition,
               }}
             />
           )}
@@ -581,16 +609,30 @@ function PolygonCutout({
   const defaultBounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
   const bounds = viewer.boundsMap[id] ?? defaultBounds
 
+  // For geometry cutouts, use geometry-specific styles and strip the wrapper
+  // filter (drop-shadow doesn't produce good visuals on geometric shapes).
+  let geometryStyle: GeometryStyle | undefined
   let layerStyle: CSSProperties
   if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
     // Polygon indicators are hidden when idle — unlike image cutouts, they have
     // no transparent-PNG content that blends naturally with the background.
-    layerStyle = { ...resolvedEffect.cutoutIdle, opacity: 0 }
+    layerStyle = { ...resolvedEffect.cutoutIdle, filter: "none", opacity: 0 }
+    geometryStyle = resolvedEffect.geometryIdle
   } else if (viewer.showAll || isActive) {
-    layerStyle = resolvedEffect.cutoutActive
+    layerStyle = stripFilter(resolvedEffect.cutoutActive)
+    geometryStyle = resolvedEffect.geometryActive
   } else {
-    layerStyle = resolvedEffect.cutoutInactive
+    layerStyle = stripFilter(resolvedEffect.cutoutInactive)
+    geometryStyle = resolvedEffect.geometryInactive
   }
+
+  // Fallback geometry style if the effect doesn't define one
+  const defaultGeometry: GeometryStyle = {
+    fill: "rgba(37, 99, 235, 0.15)",
+    stroke: "rgba(37, 99, 235, 0.6)",
+    strokeWidth: 2,
+  }
+  const geo = geometryStyle ?? defaultGeometry
 
   const cutoutCtx: CutoutContextValue = useMemo(
     () => ({
@@ -630,13 +672,17 @@ function PolygonCutout({
                 inset: 0,
                 width: "100%",
                 height: "100%",
+                filter: geo.glow
+                  ? `drop-shadow(${geo.glow.split(",")[0]?.trim() ?? ""})`
+                  : "none",
               }}
             >
               <polygon
                 points={defPoints.map(([x, y]) => `${x},${y}`).join(" ")}
-                fill="rgba(37, 99, 235, 0.15)"
-                stroke="rgba(37, 99, 235, 0.6)"
-                strokeWidth={0.003}
+                fill={geo.fill}
+                stroke={geo.stroke}
+                strokeWidth={(geo.strokeWidth ?? 2) * 0.0015}
+                style={{ transition: resolvedEffect.transition }}
               />
             </svg>
           )}

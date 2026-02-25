@@ -1,8 +1,30 @@
 import type { CSSProperties } from "react"
 
 /**
+ * Visual style for geometry-based cutouts (bbox, polygon).
+ * These are applied directly to the inner shape element rather than the
+ * wrapper div, because CSS `filter: drop-shadow()` on the wrapper doesn't
+ * produce good results for geometric shapes the way it does for images.
+ */
+export interface GeometryStyle {
+  /** Fill color (CSS color string) */
+  fill: string
+  /** Stroke / border color (CSS color string) */
+  stroke: string
+  /** Stroke width in px for bbox borders, or normalized units for polygon SVG */
+  strokeWidth?: number
+  /** Box-shadow string applied to bbox, or SVG filter glow for polygon */
+  glow?: string
+}
+
+/**
  * A hover effect preset defines how the main image, the hovered cutout,
  * and the non-hovered cutouts should look during a hover interaction.
+ *
+ * The `cutout*` styles are applied to the wrapper div and work best with
+ * image-based cutouts (transparent PNGs). For geometry-based cutouts
+ * (bbox, polygon), the optional `geometry*` styles control the inner
+ * shape's fill, stroke, and glow independently.
  */
 export interface HoverEffect {
   /** Label for display / debugging */
@@ -19,6 +41,12 @@ export interface HoverEffect {
   cutoutInactive: CSSProperties
   /** Default cutout style when nothing is hovered */
   cutoutIdle: CSSProperties
+  /** Styles for geometry-based cutout shapes when active (hovered/selected) */
+  geometryActive?: GeometryStyle
+  /** Styles for geometry-based cutout shapes when another cutout is active */
+  geometryInactive?: GeometryStyle
+  /** Styles for geometry-based cutout shapes in idle state (nothing hovered) */
+  geometryIdle?: GeometryStyle
 }
 
 const SPRING = "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)"
@@ -53,6 +81,22 @@ export const appleEffect: HoverEffect = {
     filter: "drop-shadow(0 1px 4px rgba(0, 0, 0, 0.12))",
     opacity: 1,
   },
+  geometryActive: {
+    fill: "rgba(130, 190, 255, 0.2)",
+    stroke: "rgba(130, 190, 255, 0.9)",
+    strokeWidth: 2,
+    glow: "0 0 24px rgba(130, 190, 255, 0.5), 0 0 56px rgba(130, 190, 255, 0.2), 0 12px 40px rgba(0, 0, 0, 0.4)",
+  },
+  geometryInactive: {
+    fill: "rgba(100, 150, 200, 0.06)",
+    stroke: "rgba(100, 150, 200, 0.2)",
+    strokeWidth: 1,
+  },
+  geometryIdle: {
+    fill: "transparent",
+    stroke: "transparent",
+    strokeWidth: 1,
+  },
 }
 
 /**
@@ -84,6 +128,22 @@ export const glowEffect: HoverEffect = {
     filter: "none",
     opacity: 1,
   },
+  geometryActive: {
+    fill: "rgba(255, 200, 100, 0.15)",
+    stroke: "rgba(255, 200, 100, 0.85)",
+    strokeWidth: 2,
+    glow: "0 0 20px rgba(255, 200, 100, 0.5), 0 0 56px rgba(255, 200, 100, 0.2)",
+  },
+  geometryInactive: {
+    fill: "rgba(200, 160, 80, 0.05)",
+    stroke: "rgba(200, 160, 80, 0.2)",
+    strokeWidth: 1,
+  },
+  geometryIdle: {
+    fill: "transparent",
+    stroke: "transparent",
+    strokeWidth: 1,
+  },
 }
 
 /**
@@ -113,6 +173,22 @@ export const liftEffect: HoverEffect = {
     filter: "none",
     opacity: 1,
   },
+  geometryActive: {
+    fill: "rgba(255, 255, 255, 0.1)",
+    stroke: "rgba(255, 255, 255, 0.7)",
+    strokeWidth: 2,
+    glow: "0 20px 56px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 255, 255, 0.1)",
+  },
+  geometryInactive: {
+    fill: "rgba(255, 255, 255, 0.02)",
+    stroke: "rgba(255, 255, 255, 0.1)",
+    strokeWidth: 1,
+  },
+  geometryIdle: {
+    fill: "transparent",
+    stroke: "transparent",
+    strokeWidth: 1,
+  },
 }
 
 /**
@@ -141,6 +217,21 @@ export const subtleEffect: HoverEffect = {
     transform: "scale(1)",
     filter: "none",
     opacity: 1,
+  },
+  geometryActive: {
+    fill: "rgba(255, 255, 255, 0.08)",
+    stroke: "rgba(255, 255, 255, 0.5)",
+    strokeWidth: 1,
+  },
+  geometryInactive: {
+    fill: "transparent",
+    stroke: "rgba(255, 255, 255, 0.1)",
+    strokeWidth: 1,
+  },
+  geometryIdle: {
+    fill: "transparent",
+    stroke: "transparent",
+    strokeWidth: 1,
   },
 }
 

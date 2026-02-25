@@ -37,5 +37,5 @@ export {
   subtleEffect,
   traceEffect,
 } from "./hover-effects"
-export type { HoverEffect, HoverEffectPreset } from "./hover-effects"
+export type { HoverEffect, HoverEffectPreset, GeometryStyle } from "./hover-effects"
 
