@@ -1,8 +1,13 @@
 # react-img-cutout
 
-`react-img-cutout` is a composable React component for interactive image cutouts.
-It layers transparent PNGs over a base image, performs pixel-level alpha hit
-testing, and exposes a compound API for overlays and custom hover effects.
+`react-img-cutout` provides a simple, composable component for creating interactive image regions. 
+It enables pixel-perfect interaction using transparent PNG cutouts, while also supporting standard bounding boxes and polygons for geometric shapes. 
+
+
+
+https://github.com/user-attachments/assets/4e4413b6-362a-4023-91f1-44452ea0c605
+
+
 
 ## Quick Start
 

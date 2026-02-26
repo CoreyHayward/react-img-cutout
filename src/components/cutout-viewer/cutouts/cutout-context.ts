@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
-import type { CutoutBounds } from "./use-cutout-hit-test"
-import type { HoverEffect } from "./hover-effects"
+import type { CutoutBounds } from "../hit-test-strategy"
+import type { HoverEffect } from "../hover-effects"
 
 export interface CutoutContextValue {
   id: string

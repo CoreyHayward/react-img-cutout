@@ -448,7 +448,7 @@ export function App() {
                 </thead>
                 <tbody className="text-neutral-400">
                   <PropRow prop="mainImage" type="string" def="—" desc="URL of the main background image" />
-                  <PropRow prop="effect" type='"apple" | "glow" | "lift" | "subtle" | "trace" | HoverEffect' def='"apple"' desc="Hover effect preset or custom object" />
+                  <PropRow prop="effect" type='"elevate" | "glow" | "lift" | "subtle" | "trace" | HoverEffect' def='"apple"' desc="Hover effect preset or custom object" />
                   <PropRow prop="enabled" type="boolean" def="true" desc="Toggle hover interactions" />
                   <PropRow prop="showAll" type="boolean" def="false" desc="Force all cutouts into active state" />
                   <PropRow prop="alphaThreshold" type="number (0-255)" def="30" desc="Min alpha for pixel hit-testing" />
@@ -495,7 +495,7 @@ export function App() {
           <div>
             <h3 className="mb-1 font-medium text-neutral-200">Effect presets</h3>
             <ul className="ml-4 list-disc space-y-1">
-              <li><strong className="text-neutral-300">apple</strong> — Lifts and blue-glows hovered subject, dims background</li>
+              <li><strong className="text-neutral-300">elevate</strong> — Lifts and blue-glows hovered subject, dims background</li>
               <li><strong className="text-neutral-300">glow</strong> — Warm golden glow, no lift transform</li>
               <li><strong className="text-neutral-300">lift</strong> — Strong upward lift with deep shadow</li>
               <li><strong className="text-neutral-300">subtle</strong> — Minimal dimming, no transforms</li>
