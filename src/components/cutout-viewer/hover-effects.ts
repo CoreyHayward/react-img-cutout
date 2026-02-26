@@ -1,9 +1,5 @@
 import type { CSSProperties } from "react"
 
-/* ------------------------------------------------------------------ */
-/*  Keyframe animation primitives                                      */
-/* ------------------------------------------------------------------ */
-
 /**
  * Describes a CSS `@keyframes` rule that an effect needs at runtime.
  *
@@ -54,10 +50,6 @@ export function defineKeyframes(name: string, css: string): KeyframeAnimation {
   return { name, css }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Keyframe injection                                                 */
-/* ------------------------------------------------------------------ */
-
 /**
  * Set of keyframe names already injected into the document `<head>`.
  * Using a Set (rather than a per-name boolean) keeps bookkeeping tidy
@@ -88,10 +80,6 @@ export function ensureEffectKeyframes(effect: HoverEffect): void {
     document.head.appendChild(style)
   }
 }
-
-/* ------------------------------------------------------------------ */
-/*  Style interfaces                                                   */
-/* ------------------------------------------------------------------ */
 
 /**
  * Visual style for geometry-based cutouts (bbox, polygon).
@@ -373,9 +361,7 @@ export const subtleEffect: HoverEffect = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  Trace effect keyframes                                             */
-/* ------------------------------------------------------------------ */
+// Trace effect
 
 /** Animates `stroke-dashoffset` to move a partial stroke around the shape. */
 const traceStrokeKeyframes = defineKeyframes(
@@ -446,9 +432,7 @@ export const traceEffect: HoverEffect = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  Shimmer effect — Apple-style shine over hovered cutouts            */
-/* ------------------------------------------------------------------ */
+// Shimmer effect
 
 const shimmerKeyframes = defineKeyframes(
   "_ricut-shimmer",
