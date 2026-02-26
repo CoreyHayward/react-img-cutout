@@ -5,13 +5,9 @@ import {
   type ReactNode,
   type CSSProperties,
 } from "react"
-import type { CutoutBounds } from "./hit-test-strategy"
+import type { CutoutBounds } from "../hit-test-strategy"
 import { CutoutContext } from "./cutout-context"
-import { useCutoutViewerContext } from "./viewer-context"
-
-/* ------------------------------------------------------------------ */
-/*  Placement types                                                    */
-/* ------------------------------------------------------------------ */
+import { useCutoutViewerContext } from "../viewer-context"
 
 export type Placement =
   | "top-left"
@@ -23,10 +19,6 @@ export type Placement =
   | "bottom-left"
   | "bottom-center"
   | "bottom-right"
-
-/* ------------------------------------------------------------------ */
-/*  Placement helper                                                   */
-/* ------------------------------------------------------------------ */
 
 /**
  * Converts a `Placement` value into CSS positioning properties
@@ -75,10 +67,6 @@ function getPlacementStyle(
     transform: `translate(${translateX}, ${translateY})`,
   }
 }
-
-/* ------------------------------------------------------------------ */
-/*  Overlay sub-component                                              */
-/* ------------------------------------------------------------------ */
 
 export interface CutoutOverlayProps {
   /**

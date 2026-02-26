@@ -7,30 +7,22 @@ import {
   type ReactNode,
   type CSSProperties,
 } from "react"
-import type { CutoutBounds } from "./hit-test-strategy"
+import type { CutoutBounds } from "../hit-test-strategy"
 import {
   hoverEffects,
   type HoverEffect,
   type HoverEffectPreset,
   type GeometryStyle,
-} from "./hover-effects"
+} from "../hover-effects"
 import { CutoutContext, type CutoutContextValue } from "./cutout-context"
-import { CutoutRegistryContext, useCutoutViewerContext } from "./viewer-context"
+import { CutoutRegistryContext, useCutoutViewerContext } from "../viewer-context"
 import type { RenderLayerProps } from "./cutout"
-
-/* ------------------------------------------------------------------ */
-/*  Helper: strip `filter` from a CSSProperties object                 */
-/* ------------------------------------------------------------------ */
 
 function stripFilter(style: CSSProperties): CSSProperties {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { filter: _, ...rest } = style
   return rest
 }
-
-/* ------------------------------------------------------------------ */
-/*  BBoxCutout sub-component                                           */
-/* ------------------------------------------------------------------ */
 
 export interface BBoxCutoutProps {
   /** Unique identifier for this cutout */

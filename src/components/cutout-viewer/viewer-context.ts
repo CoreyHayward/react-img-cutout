@@ -2,10 +2,6 @@ import { createContext, useContext } from "react"
 import type { CutoutDefinition, CutoutBounds } from "./hit-test-strategy"
 import type { HoverEffect } from "./hover-effects"
 
-/* ------------------------------------------------------------------ */
-/*  Registry context (internal)                                        */
-/* ------------------------------------------------------------------ */
-
 export interface CutoutRegistryContextValue {
   registerCutout: (def: CutoutDefinition) => void
   unregisterCutout: (id: string) => void
@@ -13,10 +9,6 @@ export interface CutoutRegistryContextValue {
 
 export const CutoutRegistryContext =
   createContext<CutoutRegistryContextValue | null>(null)
-
-/* ------------------------------------------------------------------ */
-/*  Viewer context (shared state for all children)                     */
-/* ------------------------------------------------------------------ */
 
 export interface CutoutViewerContextValue {
   activeId: string | null

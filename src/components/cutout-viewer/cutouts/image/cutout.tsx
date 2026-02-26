@@ -7,18 +7,14 @@ import {
   type ReactNode,
   type CSSProperties,
 } from "react"
-import type { CutoutBounds } from "./hit-test-strategy"
+import type { CutoutBounds } from "../../hit-test-strategy"
 import {
   hoverEffects,
   type HoverEffect,
   type HoverEffectPreset,
-} from "./hover-effects"
-import { CutoutContext, type CutoutContextValue } from "./cutout-context"
-import { CutoutRegistryContext, useCutoutViewerContext } from "./viewer-context"
-
-/* ------------------------------------------------------------------ */
-/*  RenderLayer props (for custom cutout rendering)                    */
-/* ------------------------------------------------------------------ */
+} from "../../hover-effects"
+import { CutoutContext, type CutoutContextValue } from "../cutout-context"
+import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
 
 export interface RenderLayerProps {
   isActive: boolean
@@ -27,10 +23,6 @@ export interface RenderLayerProps {
   bounds: CutoutBounds
   effect: HoverEffect
 }
-
-/* ------------------------------------------------------------------ */
-/*  Cutout sub-component                                               */
-/* ------------------------------------------------------------------ */
 
 export interface CutoutProps {
   /** Unique identifier for this cutout */

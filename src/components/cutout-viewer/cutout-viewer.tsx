@@ -25,14 +25,10 @@ import {
   CutoutViewerContext,
   type CutoutViewerContextValue,
 } from "./viewer-context"
-import { Cutout } from "./cutout"
-import { BBoxCutout } from "./bbox-cutout"
-import { PolygonCutout } from "./polygon-cutout"
-import { CutoutOverlay } from "./cutout-overlay"
-
-/* ------------------------------------------------------------------ */
-/*  Internal serialization helper                                      */
-/* ------------------------------------------------------------------ */
+import { Cutout } from "./cutouts/image/cutout"
+import { BBoxCutout } from "./cutouts/bbox/bbox-cutout"
+import { PolygonCutout } from "./cutouts/polygon/polygon-cutout"
+import { CutoutOverlay } from "./cutouts/cutout-overlay"
 
 function serializeDefinition(def: CutoutDefinition): string {
   switch (def.type) {
@@ -44,10 +40,6 @@ function serializeDefinition(def: CutoutDefinition): string {
       return `polygon:${def.points.flat().join(",")}:${def.label ?? ""}`
   }
 }
-
-/* ------------------------------------------------------------------ */
-/*  Root                                                               */
-/* ------------------------------------------------------------------ */
 
 export interface CutoutViewerProps {
   /** URL of the main background image */
@@ -244,9 +236,7 @@ function CutoutViewerBase({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  Attach sub-components for compound pattern                         */
-/* ------------------------------------------------------------------ */
+// Compound component pattern
 
 type CutoutViewerComponent = ((props: CutoutViewerProps) => ReactElement) & {
   Cutout: typeof Cutout

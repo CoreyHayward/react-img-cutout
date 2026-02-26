@@ -3,9 +3,7 @@ import { useState } from "react"
 import { CutoutViewer } from "./cutout-viewer"
 import type { HoverEffect } from "./hover-effects"
 
-/* ------------------------------------------------------------------ */
-/*  Shared demo data                                                   */
-/* ------------------------------------------------------------------ */
+// Shared demo data
 
 const MAIN_IMAGE = "/demo-images/main.png"
 
@@ -14,9 +12,7 @@ const CUTOUTS = {
   man: { id: "man", src: "/demo-images/man.png", label: "Man" },
 } as const
 
-/* ------------------------------------------------------------------ */
-/*  Meta                                                               */
-/* ------------------------------------------------------------------ */
+// Meta
 
 const meta: Meta<typeof CutoutViewer> = {
   title: "Components/CutoutViewer",
@@ -94,9 +90,7 @@ cutout individually.
 export default meta
 type Story = StoryObj<typeof CutoutViewer>
 
-/* ------------------------------------------------------------------ */
-/*  Helper: wrap args into composable children                         */
-/* ------------------------------------------------------------------ */
+// Helper: wrap args into composable children
 
 const DefaultChildren = () => (
   <>
@@ -105,9 +99,7 @@ const DefaultChildren = () => (
   </>
 )
 
-/* ------------------------------------------------------------------ */
-/*  1. Default — Elevate effect                                       */
-/* ------------------------------------------------------------------ */
+// 1. Default — Elevate effect
 
 export const ElevateEffect: Story = {
   name: "Elevate Effect (default)",
@@ -128,9 +120,7 @@ export const ElevateEffect: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  2. Glow effect                                                     */
-/* ------------------------------------------------------------------ */
+// 2. Glow effect
 
 export const GlowEffect: Story = {
   args: { effect: "glow" },
@@ -150,9 +140,7 @@ export const GlowEffect: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  3. Lift effect                                                     */
-/* ------------------------------------------------------------------ */
+// 3. Lift effect
 
 export const LiftEffect: Story = {
   args: { effect: "lift" },
@@ -172,9 +160,7 @@ export const LiftEffect: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  4. Subtle effect                                                   */
-/* ------------------------------------------------------------------ */
+// 4. Subtle effect
 
 export const SubtleEffect: Story = {
   args: { effect: "subtle" },
@@ -195,9 +181,7 @@ export const SubtleEffect: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  5. Effects disabled                                                */
-/* ------------------------------------------------------------------ */
+// 5. Effects disabled
 
 export const EffectsDisabled: Story = {
   args: { enabled: false },
@@ -217,9 +201,7 @@ export const EffectsDisabled: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  6. Show all active                                                 */
-/* ------------------------------------------------------------------ */
+// 6. Show all active
 
 export const ShowAllActive: Story = {
   args: { showAll: true },
@@ -239,9 +221,7 @@ export const ShowAllActive: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  7. Overlay — floating action button                               */
-/* ------------------------------------------------------------------ */
+// 7. Overlay — floating action button
 
 export const WithButtonOverlay: Story = {
   name: "Overlay — Action Button",
@@ -319,9 +299,7 @@ export const WithButtonOverlay: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  8. Overlay — name label                                            */
-/* ------------------------------------------------------------------ */
+// 8. Overlay — name label
 
 export const WithLabelOverlay: Story = {
   name: "Overlay — Name Label",
@@ -389,9 +367,7 @@ export const WithLabelOverlay: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  9. Show all + all overlays                                         */
-/* ------------------------------------------------------------------ */
+// 9. Show all + all overlays
 
 export const ShowAllWithLabels: Story = {
   name: "Show All + Labels",
@@ -448,9 +424,7 @@ export const ShowAllWithLabels: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  10. Custom HoverEffect object                                      */
-/* ------------------------------------------------------------------ */
+// 10. Custom HoverEffect object
 
 const neonEffect: HoverEffect = {
   name: "neon",
@@ -499,9 +473,7 @@ export const CustomEffect: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  11. Per-cutout effect override                                     */
-/* ------------------------------------------------------------------ */
+// 11. Per-cutout effect override
 
 export const PerCutoutEffect: Story = {
   name: "Per-Cutout Effect Override",
@@ -557,9 +529,7 @@ export const PerCutoutEffect: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  12. Placement positions demo                                       */
-/* ------------------------------------------------------------------ */
+// 12. Placement positions demo
 
 export const PlacementPositions: Story = {
   name: "Overlay Placement Positions",
@@ -627,9 +597,7 @@ function Tag({ children }: { children: string }) {
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  13. Callbacks                                                      */
-/* ------------------------------------------------------------------ */
+// 13. Callbacks
 
 export const WithCallbacks: Story = {
   render: (args) => {
@@ -686,9 +654,7 @@ export const WithCallbacks: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  14. Single cutout                                                  */
-/* ------------------------------------------------------------------ */
+// 14. Single cutout
 
 export const SingleCutout: Story = {
   render: (args) => (
@@ -706,9 +672,7 @@ export const SingleCutout: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  15. BBox Cutout                                                    */
-/* ------------------------------------------------------------------ */
+// 15. BBox Cutout
 
 export const BBoxCutout: Story = {
   name: "BBox Cutout",
@@ -739,9 +703,7 @@ export const BBoxCutout: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  16. Polygon Cutout                                                 */
-/* ------------------------------------------------------------------ */
+// 16. Polygon Cutout
 
 export const PolygonCutout: Story = {
   render: (args) => (
@@ -776,9 +738,7 @@ export const PolygonCutout: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  17. Custom renderLayer                                             */
-/* ------------------------------------------------------------------ */
+// 17. Custom renderLayer
 
 export const CustomRenderLayer: Story = {
   name: "Custom renderLayer",
@@ -830,9 +790,7 @@ export const CustomRenderLayer: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  18. Mixed cutout types                                             */
-/* ------------------------------------------------------------------ */
+// 18. Mixed cutout types
 
 export const MixedCutoutTypes: Story = {
   render: (args) => (
@@ -884,9 +842,7 @@ export const MixedCutoutTypes: Story = {
   },
 }
 
-/* ------------------------------------------------------------------ */
-/*  19. Playground                                                     */
-/* ------------------------------------------------------------------ */
+// 19. Playground
 
 export const Playground: Story = {
   name: "⚡ Playground",

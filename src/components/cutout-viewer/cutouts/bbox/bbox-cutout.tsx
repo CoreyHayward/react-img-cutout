@@ -7,20 +7,16 @@ import {
   type ReactNode,
   type CSSProperties,
 } from "react"
-import type { CutoutBounds } from "./hit-test-strategy"
+import type { CutoutBounds } from "../../hit-test-strategy"
 import {
   hoverEffects,
   type HoverEffect,
   type HoverEffectPreset,
   type GeometryStyle,
-} from "./hover-effects"
-import { CutoutContext, type CutoutContextValue } from "./cutout-context"
-import { CutoutRegistryContext, useCutoutViewerContext } from "./viewer-context"
-import type { RenderLayerProps } from "./cutout"
-
-/* ------------------------------------------------------------------ */
-/*  Helper: strip `filter` from a CSSProperties object                 */
-/* ------------------------------------------------------------------ */
+} from "../../hover-effects"
+import { CutoutContext, type CutoutContextValue } from "../cutout-context"
+import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
+import type { RenderLayerProps } from "../image/cutout"
 
 function stripFilter(style: CSSProperties): CSSProperties {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -28,48 +24,44 @@ function stripFilter(style: CSSProperties): CSSProperties {
   return rest
 }
 
-/* ------------------------------------------------------------------ */
-/*  PolygonCutout sub-component                                        */
-/* ------------------------------------------------------------------ */
-
-export interface PolygonCutoutProps {
+export interface BBoxCutoutProps {
   /** Unique identifier for this cutout */
   id: string
-  /** Array of [x, y] normalized 0-1 points forming a closed path */
-  points: [number, number][]
+  /** Normalized 0-1 bounding box coordinates */
+  bounds: { x: number; y: number; w: number; h: number }
   /** Human-readable label */
   label?: string
   /** Override the viewer-level hover effect for this specific cutout */
   effect?: HoverEffectPreset | HoverEffect
   /** Children rendered inside this cutout's context (e.g. `<Overlay>`) */
   children?: ReactNode
-  /** Custom renderer for the cutout layer. When provided, replaces the default SVG rendering. */
+  /** Custom renderer for the cutout layer. When provided, replaces the default rendering. */
   renderLayer?: (props: RenderLayerProps) => ReactNode
 }
 
-export function PolygonCutout({
+export function BBoxCutout({
   id,
-  points: defPoints,
+  bounds: defBounds,
   label,
   effect: effectOverride,
   children,
   renderLayer,
-}: PolygonCutoutProps) {
+}: BBoxCutoutProps) {
   const registry = useContext(CutoutRegistryContext)
   const viewer = useCutoutViewerContext()
 
   if (!registry) {
     throw new Error(
-      "<CutoutViewer.PolygonCutout> must be used inside <CutoutViewer>"
+      "<CutoutViewer.BBoxCutout> must be used inside <CutoutViewer>"
     )
   }
 
   /* --- Register / unregister -------------------------------------- */
-  const pointsKey = defPoints.flat().join(",")
+  const { x: bx, y: by, w: bw, h: bh } = defBounds
   useEffect(() => {
-    registry.registerCutout({ type: "polygon", id, points: defPoints, label })
+    registry.registerCutout({ type: "bbox", id, bounds: { x: bx, y: by, w: bw, h: bh }, label })
     return () => registry.unregisterCutout(id)
-  }, [id, pointsKey, label, registry]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, bx, by, bw, bh, label, registry])
 
   /* --- Resolve per-cutout effect ---------------------------------- */
   const resolvedEffect = effectOverride
@@ -91,11 +83,12 @@ export function PolygonCutout({
   let geometryStyle: GeometryStyle | undefined
   let layerStyle: CSSProperties
   if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
-    // Polygon indicators are hidden when idle — unlike image cutouts, they have
+    // BBox indicators are hidden when idle — unlike image cutouts, they have
     // no transparent-PNG content that blends naturally with the background.
     layerStyle = { ...resolvedEffect.cutoutIdle, filter: "none", opacity: 0 }
     geometryStyle = resolvedEffect.geometryIdle
   } else if (viewer.showAll || isActive) {
+    // Keep transform & opacity from cutoutActive but strip filter for geometry
     layerStyle = stripFilter(resolvedEffect.cutoutActive)
     geometryStyle = resolvedEffect.geometryActive
   } else {
@@ -155,12 +148,15 @@ export function PolygonCutout({
                   : "none",
               }}
             >
-              <polygon
-                points={defPoints.map(([x, y]) => `${x},${y}`).join(" ")}
+              <rect
+                x={bounds.x}
+                y={bounds.y}
+                width={bounds.w}
+                height={bounds.h}
+                rx={0.004}
                 fill={geo.fill}
                 stroke={geo.stroke}
                 strokeWidth={(geo.strokeWidth ?? 2) * 0.0015}
-                strokeLinejoin="round"
                 strokeLinecap={geo.strokeDasharray ? "round" : undefined}
                 strokeDasharray={geo.strokeDasharray}
                 pathLength={geo.strokeDasharray ? 1 : undefined}
