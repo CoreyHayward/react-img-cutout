@@ -1,13 +1,12 @@
-export { CutoutViewer, CutoutOverlay } from "./cutout-viewer"
-export type {
-  CutoutViewerProps,
-  CutoutOverlayProps,
-  CutoutProps,
-  BBoxCutoutProps,
-  PolygonCutoutProps,
-  RenderLayerProps,
-  Placement,
-} from "./cutout-viewer"
+export { CutoutViewer } from "./cutout-viewer"
+export type { CutoutViewerProps } from "./cutout-viewer"
+
+export { CutoutOverlay } from "./cutout-overlay"
+export type { CutoutOverlayProps, Placement } from "./cutout-overlay"
+
+export type { CutoutProps, RenderLayerProps } from "./cutout"
+export type { BBoxCutoutProps } from "./bbox-cutout"
+export type { PolygonCutoutProps } from "./polygon-cutout"
 
 export { useCutout } from "./cutout-context"
 
@@ -20,7 +19,7 @@ export type {
   BoundingBoxCutoutDefinition,
   PolygonCutoutDefinition,
   HitTestStrategy,
-} from "./use-cutout-hit-test"
+} from "./hit-test-strategy"
 
 export {
   ImageHitTestStrategy,
