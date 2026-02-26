@@ -14,6 +14,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
+    copyPublicDir: false,
     lib: {
       entry: path.resolve(dirname, "src/index.ts"),
       name: "ReactImgCutout",
