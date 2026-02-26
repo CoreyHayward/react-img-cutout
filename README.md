@@ -3,9 +3,7 @@
 `react-img-cutout` provides a simple, composable component for creating interactive image regions. 
 It enables pixel-perfect interaction using transparent PNG cutouts, while also supporting standard bounding boxes and polygons for geometric shapes. 
 
-
-
-https://github.com/user-attachments/assets/4e4413b6-362a-4023-91f1-44452ea0c605
+![Demo](https://github.com/user-attachments/assets/5c59024a-9027-4da0-a47f-6bf6d5576530)
 
 
 
