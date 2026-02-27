@@ -154,6 +154,68 @@ as segmentation masks or hand-drawn annotations.
 | `renderLayer` | `(props: RenderLayerProps) => ReactNode?` | Custom renderer replacing the default SVG polygon |
 | `children` | `ReactNode?` | Overlay content |
 
+### Draw Polygon (`CutoutViewer.DrawPolygon`)
+
+Adds an interactive drawing layer over the viewer so users can define their own polygon regions directly on the image. Completed polygons are returned via `onComplete` as normalized `[x, y][]` coordinates, ready for direct use with `PolygonCutout`.
+
+```tsx
+const [regions, setRegions] = useState<[number, number][][]>([])
+const [drawing, setDrawing] = useState(true)
+
+<CutoutViewer mainImage="/photo.png">
+  <CutoutViewer.DrawPolygon
+    enabled={drawing}
+    onComplete={(points) => setRegions((prev) => [...prev, points])}
+    strokeColor="#3b82f6"
+    minPoints={3}
+    closeThreshold={0.03}
+  />
+  {regions.map((pts, i) => (
+    <CutoutViewer.PolygonCutout key={i} id={`region-${i}`} points={pts} />
+  ))}
+</CutoutViewer>
+```
+
+| Interaction | Effect |
+|---|---|
+| Click | Add a vertex |
+| Click near first vertex (≥ `minPoints`) | Snap-close → fires `onComplete` |
+| Double-click | Complete the polygon immediately |
+| Right-click | Remove the last vertex |
+| Esc | Cancel and reset the in-progress drawing |
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `onComplete` | `(points: [number, number][]) => void` | — | Called with normalized points when a polygon is finished |
+| `enabled` | `boolean` | `true` | Toggle drawing on/off without unmounting. When `false`, pointer events pass through to the viewer and any in-progress drawing is cleared |
+| `strokeColor` | `string` | `"#3b82f6"` | Accent color for the in-progress polygon overlay |
+| `minPoints` | `number` | `3` | Minimum vertices required before snap-close or double-click complete |
+| `closeThreshold` | `number` | `0.03` | Normalized (0–1) snap radius for closing near the first vertex |
+| `style` | `CSSProperties?` | — | Additional styles for the overlay container |
+| `className` | `string?` | — | Additional class name for the overlay container |
+
+#### `useDrawPolygon` (headless hook)
+
+For building completely custom drawing UIs without the built-in SVG overlay:
+
+```tsx
+import { useDrawPolygon } from "react-img-cutout"
+
+const { points, previewPoint, willClose, reset, containerRef, containerProps } =
+  useDrawPolygon({
+    onComplete: (pts) => console.log(pts),
+    minPoints: 3,
+    closeThreshold: 0.03,
+  })
+
+return (
+  <div ref={containerRef} style={{ position: "relative" }} {...containerProps}>
+    <img src="/main.png" style={{ width: "100%" }} />
+    {/* render your own SVG overlay using points / previewPoint / willClose */}
+  </div>
+)
+```
+
 ## Public API
 
 - `CutoutViewer`
@@ -162,10 +224,14 @@ as segmentation masks or hand-drawn annotations.
 - `CutoutViewer.Cutout` — image-based cutout (alpha hit-testing)
 - `CutoutViewer.BBoxCutout` — bounding-box cutout (rectangular region)
 - `CutoutViewer.PolygonCutout` — polygon cutout (arbitrary closed shape)
+- `CutoutViewer.DrawPolygon` — interactive polygon drawing overlay
+  - Props: `onComplete`, `enabled`, `strokeColor`, `minPoints`, `closeThreshold`, `style`, `className`
 - `CutoutViewer.Overlay`
   - Props: `placement`, `className`, `style`
 - `useCutout()`
   - Read nearest cutout state (`id`, `bounds`, `isActive`, `isHovered`, `isSelected`, `effect`)
+- `useDrawPolygon(options)`
+  - Headless hook; returns `points`, `previewPoint`, `willClose`, `reset`, `containerRef`, `containerProps`
 - `hoverEffects`
   - Built-in presets: `elevate`, `glow`, `lift`, `subtle`, `trace`, `shimmer`
 - `defineKeyframes(name, css)` — helper for declaring CSS `@keyframes` in custom effects

@@ -545,6 +545,32 @@ export function App() {
           </div>
 
           <div>
+            <h3 className="mb-1 font-medium text-neutral-200">Draw polygon</h3>
+            <Code>{`const [regions, setRegions] = useState<[number, number][][]>([])
+const [drawing, setDrawing] = useState(true)
+
+<CutoutViewer mainImage="/photo.png">
+  <CutoutViewer.DrawPolygon
+    enabled={drawing}
+    onComplete={(points) => setRegions((prev) => [...prev, points])}
+    strokeColor="#3b82f6"
+    minPoints={3}
+    closeThreshold={0.03}
+  />
+  {regions.map((pts, i) => (
+    <CutoutViewer.PolygonCutout key={i} id={\`region-\${i}\`} points={pts} />
+  ))}
+</CutoutViewer>`}</Code>
+            <p className="mt-2 text-xs text-neutral-500">
+              Interactions: <strong className="text-neutral-400">click</strong> — add vertex &nbsp;·&nbsp;
+              <strong className="text-neutral-400">click near start</strong> (≥ minPoints) — snap-close &nbsp;·&nbsp;
+              <strong className="text-neutral-400">double-click</strong> — complete immediately &nbsp;·&nbsp;
+              <strong className="text-neutral-400">right-click</strong> — undo last vertex &nbsp;·&nbsp;
+              <strong className="text-neutral-400">Esc</strong> — cancel
+            </p>
+          </div>
+
+          <div>
             <h3 className="mb-1 font-medium text-neutral-200">Effect presets</h3>
             <ul className="ml-4 list-disc space-y-1">
               <li><strong className="text-neutral-300">elevate</strong> — Lifts and blue-glows hovered subject, dims background</li>
