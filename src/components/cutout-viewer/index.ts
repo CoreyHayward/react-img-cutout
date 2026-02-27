@@ -8,6 +8,15 @@ export type { CutoutProps, RenderLayerProps } from "./cutouts/image/cutout"
 export type { BBoxCutoutProps } from "./cutouts/bbox/bbox-cutout"
 export type { PolygonCutoutProps } from "./cutouts/polygon/polygon-cutout"
 
+export { DrawPolygon } from "./drawing/draw-polygon"
+export type { DrawPolygonProps } from "./drawing/draw-polygon"
+
+export { useDrawPolygon } from "./drawing/use-draw-polygon"
+export type {
+  UseDrawPolygonOptions,
+  UseDrawPolygonReturn,
+} from "./drawing/use-draw-polygon"
+
 export { useCutout } from "./cutouts/cutout-context"
 
 export { useCutoutHitTest } from "./use-cutout-hit-test"
