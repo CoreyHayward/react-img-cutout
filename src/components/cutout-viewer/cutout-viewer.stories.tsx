@@ -867,6 +867,7 @@ export const DrawPolygonStory: Story = {
   name: "Draw Polygon",
   render: (args) => {
     const [regions, setRegions] = useState<[number, number][][]>([])
+    const [drawEnabled, setDrawEnabled] = useState(true)
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -876,6 +877,7 @@ export const DrawPolygonStory: Story = {
 
           {/* Drawing layer — renders on top and captures pointer events */}
           <CutoutViewer.DrawPolygon
+            enabled={drawEnabled}
             onComplete={(points) =>
               setRegions((prev) => [...prev, points])
             }
@@ -893,7 +895,21 @@ export const DrawPolygonStory: Story = {
         </CutoutViewer>
 
         {/* Controls */}
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setDrawEnabled((v) => !v)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: `1px solid ${drawEnabled ? "rgba(59,130,246,0.5)" : "rgba(255,255,255,0.15)"}`,
+              background: drawEnabled ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
+              color: drawEnabled ? "#93c5fd" : "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Drawing: {drawEnabled ? "on" : "off"}
+          </button>
           <button
             onClick={() => setRegions([])}
             style={{
@@ -923,6 +939,8 @@ export const DrawPolygonStory: Story = {
           "define their own polygon regions by clicking on the image. Each completed polygon " +
           "is passed to `onComplete` as an array of normalized `[x, y]` points (0–1), ready " +
           "to be used directly with `<CutoutViewer.PolygonCutout>`.\n\n" +
+          "The `enabled` prop toggles drawing on/off without unmounting the component — " +
+          "when disabled the overlay passes all pointer events through to the viewer.\n\n" +
           "**Controls:**\n" +
           "- **Click** — add a vertex\n" +
           "- **Click near first vertex** (≥ 3 points) — snap-close the polygon\n" +

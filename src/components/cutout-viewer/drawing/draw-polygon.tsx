@@ -14,6 +14,13 @@ export interface DrawPolygonProps extends UseDrawPolygonOptions {
    * @default "#3b82f6"
    */
   strokeColor?: string
+  /**
+   * When `false`, the drawing overlay becomes fully transparent to pointer
+   * events and any in-progress drawing is cleared. Useful for toggling draw
+   * mode on/off without unmounting the component.
+   * @default true
+   */
+  enabled?: boolean
   /** Additional inline styles applied to the drawing overlay container */
   style?: CSSProperties
   /** Additional class name applied to the drawing overlay container */
@@ -61,6 +68,7 @@ export function DrawPolygon({
   minPoints = 3,
   closeThreshold = 0.03,
   strokeColor = "#3b82f6",
+  enabled = true,
   style,
   className = "",
 }: DrawPolygonProps) {
@@ -90,6 +98,11 @@ export function DrawPolygon({
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [reset])
 
+  // Clear any in-progress drawing when drawing is disabled
+  useEffect(() => {
+    if (!enabled) reset()
+  }, [enabled, reset])
+
   // Build the list of all render-points: drawn points + live cursor preview
   const allPoints: [number, number][] = previewPoint
     ? [...points, previewPoint]
@@ -108,11 +121,12 @@ export function DrawPolygon({
       style={{
         position: "absolute",
         inset: 0,
-        cursor: willClose ? "cell" : "crosshair",
+        cursor: !enabled ? "default" : willClose ? "cell" : "crosshair",
         zIndex: 30,
+        pointerEvents: enabled ? "auto" : "none",
         ...style,
       }}
-      {...containerProps}
+      {...(enabled ? containerProps : {})}
     >
       {points.length > 0 && (
         <svg

@@ -58,6 +58,7 @@ export function App() {
 
   // Drawn polygon regions (draw mode)
   const [drawnRegions, setDrawnRegions] = useState<[number, number][][]>([])
+  const [drawEnabled, setDrawEnabled] = useState(true)
 
   // Event log
   const [log, setLog] = useState<string[]>([])
@@ -228,6 +229,7 @@ export function App() {
               {demoMode === "draw" && (
                 <>
                   <CutoutViewer.DrawPolygon
+                    enabled={drawEnabled}
                     onComplete={(points) =>
                       setDrawnRegions((prev) => [...prev, points])
                     }
@@ -361,6 +363,13 @@ export function App() {
               />
             </Field>
 
+            {/* Draw mode: controls */}
+            {demoMode === "draw" && (
+              <Field label="Drawing enabled">
+                <Toggle checked={drawEnabled} onChange={setDrawEnabled} />
+              </Field>
+            )}
+
             {/* Draw mode: clear regions button */}
             {demoMode === "draw" && drawnRegions.length > 0 && (
               <Field label={`Drawn regions: ${drawnRegions.length}`}>
@@ -384,6 +393,7 @@ export function App() {
                 setAlphaThreshold(30)
                 setDemoMode("image")
                 setDrawnRegions([])
+                setDrawEnabled(true)
                 setLog([])
               }}
               className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-neutral-500 hover:text-neutral-200"
