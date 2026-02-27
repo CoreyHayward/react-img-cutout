@@ -860,3 +860,94 @@ export const Playground: Story = {
     },
   },
 }
+
+// 20. DrawPolygon — draw freeform regions
+
+export const DrawPolygonStory: Story = {
+  name: "Draw Polygon",
+  render: (args) => {
+    const [regions, setRegions] = useState<[number, number][][]>([])
+    const [drawEnabled, setDrawEnabled] = useState(true)
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <CutoutViewer {...args}>
+          {/* Existing cutouts */}
+          <DefaultChildren />
+
+          {/* Drawing layer — renders on top and captures pointer events */}
+          <CutoutViewer.DrawPolygon
+            enabled={drawEnabled}
+            onComplete={(points) =>
+              setRegions((prev) => [...prev, points])
+            }
+          />
+
+          {/* Render each completed polygon as a PolygonCutout */}
+          {regions.map((points, i) => (
+            <CutoutViewer.PolygonCutout
+              key={i}
+              id={`drawn-${i}`}
+              points={points}
+              label={`Region ${i + 1}`}
+            />
+          ))}
+        </CutoutViewer>
+
+        {/* Controls */}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setDrawEnabled((v) => !v)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: `1px solid ${drawEnabled ? "rgba(59,130,246,0.5)" : "rgba(255,255,255,0.15)"}`,
+              background: drawEnabled ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
+              color: drawEnabled ? "#93c5fd" : "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Drawing: {drawEnabled ? "on" : "off"}
+          </button>
+          <button
+            onClick={() => setRegions([])}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.05)",
+              color: "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Clear regions ({regions.length})
+          </button>
+          <span style={{ fontSize: "12px", color: "#6b7280" }}>
+            Click to add vertices · click near start or double-click to close · right-click to undo · Esc to cancel
+          </span>
+        </div>
+      </div>
+    )
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`<CutoutViewer.DrawPolygon>` adds an interactive drawing layer that lets users " +
+          "define their own polygon regions by clicking on the image. Each completed polygon " +
+          "is passed to `onComplete` as an array of normalized `[x, y]` points (0–1), ready " +
+          "to be used directly with `<CutoutViewer.PolygonCutout>`.\n\n" +
+          "The `enabled` prop toggles drawing on/off without unmounting the component — " +
+          "when disabled the overlay passes all pointer events through to the viewer.\n\n" +
+          "**Controls:**\n" +
+          "- **Click** — add a vertex\n" +
+          "- **Click near first vertex** (≥ 3 points) — snap-close the polygon\n" +
+          "- **Double-click** — complete immediately\n" +
+          "- **Right-click** — remove the last vertex\n" +
+          "- **Esc** — cancel the current drawing",
+      },
+    },
+  },
+}

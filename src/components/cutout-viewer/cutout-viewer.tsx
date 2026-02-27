@@ -29,6 +29,7 @@ import { Cutout } from "./cutouts/image/cutout"
 import { BBoxCutout } from "./cutouts/bbox/bbox-cutout"
 import { PolygonCutout } from "./cutouts/polygon/polygon-cutout"
 import { CutoutOverlay } from "./cutouts/cutout-overlay"
+import { DrawPolygon } from "./drawing/draw-polygon"
 
 function serializeDefinition(def: CutoutDefinition): string {
   switch (def.type) {
@@ -243,6 +244,7 @@ type CutoutViewerComponent = ((props: CutoutViewerProps) => ReactElement) & {
   BBoxCutout: typeof BBoxCutout
   PolygonCutout: typeof PolygonCutout
   Overlay: typeof CutoutOverlay
+  DrawPolygon: typeof DrawPolygon
 }
 
 export const CutoutViewer = CutoutViewerBase as CutoutViewerComponent
@@ -251,3 +253,4 @@ CutoutViewer.Cutout = Cutout
 CutoutViewer.BBoxCutout = BBoxCutout
 CutoutViewer.PolygonCutout = PolygonCutout
 CutoutViewer.Overlay = CutoutOverlay
+CutoutViewer.DrawPolygon = DrawPolygon

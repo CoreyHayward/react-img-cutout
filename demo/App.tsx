@@ -31,7 +31,7 @@ const PLACEMENTS: Placement[] = [
   "bottom-right",
 ]
 
-type DemoMode = "image" | "bbox" | "polygon" | "renderLayer" | "mixed"
+type DemoMode = "image" | "bbox" | "polygon" | "renderLayer" | "mixed" | "draw"
 
 const DEMO_MODES: { value: DemoMode; label: string }[] = [
   { value: "image", label: "Image Cutouts" },
@@ -39,6 +39,7 @@ const DEMO_MODES: { value: DemoMode; label: string }[] = [
   { value: "polygon", label: "Polygon Cutouts" },
   { value: "renderLayer", label: "Custom renderLayer" },
   { value: "mixed", label: "Mixed (All Types)" },
+  { value: "draw", label: "Draw Polygon" },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -54,6 +55,10 @@ export function App() {
   const [overlayPlacement, setOverlayPlacement] = useState<Placement>("top-center")
   const [alphaThreshold, setAlphaThreshold] = useState(30)
   const [demoMode, setDemoMode] = useState<DemoMode>("image")
+
+  // Drawn polygon regions (draw mode)
+  const [drawnRegions, setDrawnRegions] = useState<[number, number][][]>([])
+  const [drawEnabled, setDrawEnabled] = useState(true)
 
   // Event log
   const [log, setLog] = useState<string[]>([])
@@ -219,6 +224,32 @@ export function App() {
                   </CutoutViewer.PolygonCutout>
                 </>
               )}
+
+              {/* Draw polygon mode */}
+              {demoMode === "draw" && (
+                <>
+                  <CutoutViewer.DrawPolygon
+                    enabled={drawEnabled}
+                    onComplete={(points) =>
+                      setDrawnRegions((prev) => [...prev, points])
+                    }
+                  />
+                  {drawnRegions.map((points, i) => (
+                    <CutoutViewer.PolygonCutout
+                      key={i}
+                      id={`drawn-${i}`}
+                      points={points}
+                      label={`Region ${i + 1}`}
+                    >
+                      {showOverlays && (
+                        <CutoutViewer.Overlay placement={overlayPlacement}>
+                          <OverlayTag>Region {i + 1}</OverlayTag>
+                        </CutoutViewer.Overlay>
+                      )}
+                    </CutoutViewer.PolygonCutout>
+                  ))}
+                </>
+              )}
             </CutoutViewer>
           </div>
 
@@ -332,6 +363,25 @@ export function App() {
               />
             </Field>
 
+            {/* Draw mode: controls */}
+            {demoMode === "draw" && (
+              <Field label="Drawing enabled">
+                <Toggle checked={drawEnabled} onChange={setDrawEnabled} />
+              </Field>
+            )}
+
+            {/* Draw mode: clear regions button */}
+            {demoMode === "draw" && drawnRegions.length > 0 && (
+              <Field label={`Drawn regions: ${drawnRegions.length}`}>
+                <button
+                  onClick={() => setDrawnRegions([])}
+                  className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-neutral-500 hover:text-neutral-200"
+                >
+                  Clear regions
+                </button>
+              </Field>
+            )}
+
             {/* Reset */}
             <button
               onClick={() => {
@@ -342,6 +392,8 @@ export function App() {
                 setOverlayPlacement("top-center")
                 setAlphaThreshold(30)
                 setDemoMode("image")
+                setDrawnRegions([])
+                setDrawEnabled(true)
                 setLog([])
               }}
               className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-neutral-500 hover:text-neutral-200"
@@ -432,6 +484,32 @@ export function App() {
     label="Lake"
   />
 </CutoutViewer>`}</Code>
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-medium text-neutral-200">Draw polygon</h3>
+            <Code>{`const [regions, setRegions] = useState<[number, number][][]>([])
+const [drawing, setDrawing] = useState(true)
+
+<CutoutViewer mainImage="/photo.png">
+  <CutoutViewer.DrawPolygon
+    enabled={drawing}
+    onComplete={(points) => setRegions((prev) => [...prev, points])}
+    strokeColor="#3b82f6"
+    minPoints={3}
+    closeThreshold={0.03}
+  />
+  {regions.map((pts, i) => (
+    <CutoutViewer.PolygonCutout key={i} id={\`region-\${i}\`} points={pts} />
+  ))}
+</CutoutViewer>`}</Code>
+            <p className="mt-2 text-xs text-neutral-500">
+              Interactions: <strong className="text-neutral-400">click</strong> — add vertex &nbsp;·&nbsp;
+              <strong className="text-neutral-400">click near start</strong> (≥ minPoints) — snap-close &nbsp;·&nbsp;
+              <strong className="text-neutral-400">double-click</strong> — complete immediately &nbsp;·&nbsp;
+              <strong className="text-neutral-400">right-click</strong> — undo last vertex &nbsp;·&nbsp;
+              <strong className="text-neutral-400">Esc</strong> — cancel
+            </p>
           </div>
 
           <div>
