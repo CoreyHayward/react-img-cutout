@@ -104,6 +104,8 @@ function TraceOverlay({
           points={pointsStr}
           fill="rgba(255, 255, 255, 0.03)"
           stroke={color}
+          // 0.0015 converts CSS px to the 0-1 SVG viewBox coordinate space,
+          // matching the factor used by PolygonCutout and BBoxCutout.
           strokeWidth={width * 0.0015}
           strokeLinejoin="round"
           strokeLinecap="round"
