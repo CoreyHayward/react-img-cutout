@@ -82,25 +82,6 @@ export function ensureEffectKeyframes(effect: HoverEffect): void {
 }
 
 /**
- * Configuration for the animated trace overlay on image-based cutouts.
- *
- * When set on a {@link HoverEffect}, the image cutout extracts a polygon
- * outline from its alpha channel and renders it with the same SVG
- * `stroke-dasharray` animation used on geometric shapes (bbox / polygon).
- */
-export interface TraceConfig {
-  /** Thickness of the visible edge border in CSS pixels (default: `6`). */
-  width?: number
-  /**
-   * Duration of one full revolution in seconds (default: `3`).
-   * Lower values spin faster; higher values are more subtle.
-   */
-  duration?: number
-  /** CSS color of the trace highlight (default: `"rgba(255, 255, 255, 0.9)"`). */
-  color?: string
-}
-
-/**
  * Visual style for geometry-based cutouts (bbox, polygon).
  * These are applied directly to the inner shape element rather than the
  * wrapper div, because CSS `filter: drop-shadow()` on the wrapper doesn't
@@ -192,14 +173,6 @@ export interface HoverEffect {
   geometryInactive?: GeometryStyle
   /** Styles for geometry-based cutout shapes in idle state (nothing hovered) */
   geometryIdle?: GeometryStyle
-  /**
-   * Optional trace overlay configuration for image-based cutouts.
-   *
-   * When set, the image cutout renders an animated bright arc that sweeps
-   * around the cutout's silhouette edge, replicating the stroke-dash
-   * trace effect used on geometric shapes (bbox, polygon).
-   */
-  traceConfig?: TraceConfig
 }
 
 const SPRING = "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)"
@@ -407,11 +380,6 @@ export const traceEffect: HoverEffect = {
   name: "trace",
   transition: SPRING,
   keyframes: [traceStrokeKeyframes],
-  traceConfig: {
-    width: 6,
-    duration: 3,
-    color: "rgba(255, 255, 255, 0.9)",
-  },
   mainImageHovered: {
     filter: "brightness(0.35) saturate(0.5)",
   },

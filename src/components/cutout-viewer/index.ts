@@ -52,6 +52,5 @@ export type {
   HoverEffectPreset,
   GeometryStyle,
   KeyframeAnimation,
-  TraceConfig,
 } from "./hover-effects"
 
