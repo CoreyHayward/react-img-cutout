@@ -12,6 +12,7 @@ import {
   hoverEffects,
   type HoverEffect,
   type HoverEffectPreset,
+  type TraceConfig,
 } from "../../hover-effects"
 import { CutoutContext, type CutoutContextValue } from "../cutout-context"
 import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
@@ -37,6 +38,82 @@ export interface CutoutProps {
   children?: ReactNode
   /** Custom renderer for the cutout layer. When provided, replaces the default `<img>` rendering. */
   renderLayer?: (props: RenderLayerProps) => ReactNode
+}
+
+/**
+ * Renders the animated trace overlay for image-based cutouts.
+ *
+ * Uses a CSS mask compositing trick to extract only the border pixels of
+ * the cutout silhouette, then sweeps a rotating conic-gradient through
+ * them — replicating the stroke-dasharray animation used on geometric
+ * shapes (bbox / polygon).
+ */
+function TraceOverlay({
+  src,
+  config,
+  active,
+  transition,
+}: {
+  src: string
+  config: TraceConfig
+  active: boolean
+  transition: string
+}) {
+  const width = config.width ?? 6
+  const duration = config.duration ?? 3
+  const color = config.color ?? "rgba(255, 255, 255, 0.9)"
+
+  const imgUrl = `url(${src})`
+  const innerSize = `calc(100% - ${width * 2}px)`
+
+  /* Use individual mask-* properties (not the shorthand) to avoid
+     the shorthand resetting mask-composite back to its initial value. */
+  const edgeMaskStyle: CSSProperties & Record<string, string> = {
+    position: "absolute",
+    inset: "0",
+    overflow: "hidden",
+    maskImage: `${imgUrl}, ${imgUrl}`,
+    maskSize: `100% 100%, ${innerSize} ${innerSize}`,
+    maskPosition: "center, center",
+    maskRepeat: "no-repeat, no-repeat",
+    maskComposite: "exclude",
+    WebkitMaskImage: `${imgUrl}, ${imgUrl}`,
+    WebkitMaskSize: `100% 100%, ${innerSize} ${innerSize}`,
+    WebkitMaskPosition: "center, center",
+    WebkitMaskRepeat: "no-repeat, no-repeat",
+    WebkitMaskComposite: "xor",
+  }
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        opacity: active ? 1 : 0,
+        transition,
+        filter: `drop-shadow(0 0 ${width}px ${color})`,
+      }}
+    >
+      <div style={edgeMaskStyle}>
+        <div
+          style={{
+            position: "absolute",
+            inset: "-100%",
+            background: `conic-gradient(
+              transparent 0%,
+              transparent 70%,
+              ${color} 85%,
+              ${color} 90%,
+              transparent 100%
+            )`,
+            borderRadius: "50%",
+            animation: `_ricut-trace-rotate ${duration}s linear infinite`,
+          }}
+        />
+      </div>
+    </div>
+  )
 }
 
 export function Cutout({ id, src, label, effect: effectOverride, children, renderLayer }: CutoutProps) {
@@ -76,6 +153,9 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
   } else {
     layerStyle = resolvedEffect.cutoutInactive
   }
+
+  const traceActive =
+    viewer.enabled && (viewer.showAll || isActive)
 
   const cutoutCtx: CutoutContextValue = useMemo(
     () => ({
@@ -119,6 +199,16 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
               }}
             />
           )}
+
+        {/* Animated trace overlay — bright arc sweeping the silhouette edge */}
+        {resolvedEffect.traceConfig && (
+          <TraceOverlay
+            src={src}
+            config={resolvedEffect.traceConfig}
+            active={traceActive}
+            transition={resolvedEffect.transition}
+          />
+        )}
       </div>
 
       {/* Children (overlay content) rendered on top */}

@@ -82,6 +82,28 @@ export function ensureEffectKeyframes(effect: HoverEffect): void {
 }
 
 /**
+ * Configuration for the animated trace overlay on image-based cutouts.
+ *
+ * When set on a {@link HoverEffect}, the image cutout renders an additional
+ * overlay that sweeps a bright arc around the cutout's silhouette edge,
+ * replicating the stroke-dash trace effect used on geometric shapes.
+ *
+ * The overlay uses CSS mask compositing to extract only the border pixels of
+ * the cutout shape, then animates a rotating conic-gradient through them.
+ */
+export interface TraceConfig {
+  /** Thickness of the visible edge border in CSS pixels (default: `4`). */
+  width?: number
+  /**
+   * Duration of one full revolution in seconds (default: `3`).
+   * Lower values spin faster; higher values are more subtle.
+   */
+  duration?: number
+  /** CSS color of the trace highlight (default: `"rgba(255, 255, 255, 0.9)"`). */
+  color?: string
+}
+
+/**
  * Visual style for geometry-based cutouts (bbox, polygon).
  * These are applied directly to the inner shape element rather than the
  * wrapper div, because CSS `filter: drop-shadow()` on the wrapper doesn't
@@ -173,6 +195,14 @@ export interface HoverEffect {
   geometryInactive?: GeometryStyle
   /** Styles for geometry-based cutout shapes in idle state (nothing hovered) */
   geometryIdle?: GeometryStyle
+  /**
+   * Optional trace overlay configuration for image-based cutouts.
+   *
+   * When set, the image cutout renders an animated bright arc that sweeps
+   * around the cutout's silhouette edge, replicating the stroke-dash
+   * trace effect used on geometric shapes (bbox, polygon).
+   */
+  traceConfig?: TraceConfig
 }
 
 const SPRING = "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)"
@@ -370,25 +400,28 @@ const traceStrokeKeyframes = defineKeyframes(
    to   { stroke-dashoffset: -1; }`
 )
 
-/** Sweeps a white drop-shadow highlight around image-based cutout edges. */
-const traceGlowKeyframes = defineKeyframes(
-  "_ricut-trace-glow",
-  `0%   { filter: drop-shadow(-3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   25%  { filter: drop-shadow(3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   50%  { filter: drop-shadow(3px 3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   75%  { filter: drop-shadow(-3px 3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   100% { filter: drop-shadow(-3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }`
+/** Rotates the conic-gradient disc used by the image cutout trace overlay. */
+const traceRotateKeyframes = defineKeyframes(
+  "_ricut-trace-rotate",
+  `from { transform: rotate(0deg); }
+   to   { transform: rotate(360deg); }`
 )
 
 /**
  * Trace effect — a short white dash endlessly travels around the cutout
- * border, tracing its outline. For image-based cutouts a white drop-shadow
- * highlight sweeps around the silhouette edge.
+ * border, tracing its outline. For image-based cutouts a bright arc sweeps
+ * around the silhouette edge using a CSS-mask + rotating conic-gradient
+ * overlay, closely matching the stroke-dash animation on geometric shapes.
  */
 export const traceEffect: HoverEffect = {
   name: "trace",
   transition: SPRING,
-  keyframes: [traceStrokeKeyframes, traceGlowKeyframes],
+  keyframes: [traceStrokeKeyframes, traceRotateKeyframes],
+  traceConfig: {
+    width: 6,
+    duration: 3,
+    color: "rgba(255, 255, 255, 0.9)",
+  },
   mainImageHovered: {
     filter: "brightness(0.35) saturate(0.5)",
   },
@@ -398,9 +431,8 @@ export const traceEffect: HoverEffect = {
   },
   cutoutActive: {
     transform: "scale(1)",
-    filter: "drop-shadow(-3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15))",
+    filter: "drop-shadow(0 0 8px rgba(255,255,255,0.15))",
     opacity: 1,
-    animation: `${traceGlowKeyframes.name} 3s linear infinite`,
   },
   cutoutInactive: {
     transform: "scale(1)",
