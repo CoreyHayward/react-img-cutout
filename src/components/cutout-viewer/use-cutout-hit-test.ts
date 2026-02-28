@@ -16,6 +16,7 @@ export type {
   ImageCutoutDefinition,
   BoundingBoxCutoutDefinition,
   PolygonCutoutDefinition,
+  CircleCutoutDefinition,
   HitTestStrategy,
 } from "./hit-test-strategy"
 
@@ -35,6 +36,8 @@ function serializeDefinition(def: CutoutDefinition): string {
       return `${def.id}:bbox:${def.bounds.x},${def.bounds.y},${def.bounds.w},${def.bounds.h}:${def.label ?? ""}`
     case "polygon":
       return `${def.id}:polygon:${def.points.flat().join(",")}:${def.label ?? ""}`
+    case "circle":
+      return `${def.id}:circle:${def.center.x},${def.center.y},${def.radius}:${def.label ?? ""}`
   }
 }
 
