@@ -84,12 +84,9 @@ export function ensureEffectKeyframes(effect: HoverEffect): void {
 /**
  * Configuration for the animated trace overlay on image-based cutouts.
  *
- * When set on a {@link HoverEffect}, the image cutout renders an additional
- * overlay that sweeps a bright arc around the cutout's silhouette edge,
- * replicating the stroke-dash trace effect used on geometric shapes.
- *
- * The overlay uses CSS mask compositing to extract only the border pixels of
- * the cutout shape, then rotates a narrow conic-gradient beam through them.
+ * When set on a {@link HoverEffect}, the image cutout extracts a polygon
+ * outline from its alpha channel and renders it with the same SVG
+ * `stroke-dasharray` animation used on geometric shapes (bbox / polygon).
  */
 export interface TraceConfig {
   /** Thickness of the visible edge border in CSS pixels (default: `6`). */
@@ -400,23 +397,16 @@ const traceStrokeKeyframes = defineKeyframes(
    to   { stroke-dashoffset: -1; }`
 )
 
-/** Rotates the conic-gradient beam used by the image cutout trace overlay. */
-const traceRotateKeyframes = defineKeyframes(
-  "_ricut-trace-rotate",
-  `from { transform: rotate(0turn); }
-   to   { transform: rotate(1turn); }`
-)
-
 /**
  * Trace effect — a short white dash endlessly travels around the cutout
- * border, tracing its outline. For image-based cutouts a narrow
- * conic-gradient beam rotates around the silhouette edge using a CSS-mask
- * overlay, closely matching the stroke-dash animation on geometric shapes.
+ * border, tracing its outline. For image-based cutouts, the alpha channel
+ * is converted to a polygon outline and rendered with the same SVG
+ * stroke-dasharray animation used on geometric shapes.
  */
 export const traceEffect: HoverEffect = {
   name: "trace",
   transition: SPRING,
-  keyframes: [traceStrokeKeyframes, traceRotateKeyframes],
+  keyframes: [traceStrokeKeyframes],
   traceConfig: {
     width: 6,
     duration: 3,

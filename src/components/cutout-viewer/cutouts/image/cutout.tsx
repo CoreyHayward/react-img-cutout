@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useState,
   type ReactNode,
   type CSSProperties,
 } from "react"
@@ -16,6 +17,7 @@ import {
 } from "../../hover-effects"
 import { CutoutContext, type CutoutContextValue } from "../cutout-context"
 import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
+import { extractContour } from "./alpha-contour"
 
 export interface RenderLayerProps {
   isActive: boolean
@@ -43,10 +45,9 @@ export interface CutoutProps {
 /**
  * Renders the animated trace overlay for image-based cutouts.
  *
- * Uses a CSS mask compositing trick to extract only the border pixels of
- * the cutout silhouette, then rotates a narrow conic-gradient beam through
- * them — replicating the stroke-dasharray animation used on geometric
- * shapes (bbox / polygon).
+ * Extracts a polygon outline from the image alpha channel and renders it
+ * as an SVG polygon with the same `stroke-dasharray` + `stroke-dashoffset`
+ * animation used on geometric shapes (bbox / polygon).
  */
 function TraceOverlay({
   src,
@@ -63,26 +64,19 @@ function TraceOverlay({
   const duration = config.duration ?? 3
   const color = config.color ?? "rgba(255, 255, 255, 0.9)"
 
-  const imgUrl = `url(${src})`
-  const innerSize = `calc(100% - ${width * 2}px)`
+  const [contour, setContour] = useState<[number, number][] | null>(null)
 
-  /* Use individual mask-* properties (not the shorthand) to avoid
-     the shorthand resetting mask-composite back to its initial value. */
-  const edgeMaskStyle: CSSProperties & Record<string, string> = {
-    position: "absolute",
-    inset: "0",
-    overflow: "hidden",
-    maskImage: `${imgUrl}, ${imgUrl}`,
-    maskSize: `100% 100%, ${innerSize} ${innerSize}`,
-    maskPosition: "center, center",
-    maskRepeat: "no-repeat, no-repeat",
-    maskComposite: "exclude",
-    WebkitMaskImage: `${imgUrl}, ${imgUrl}`,
-    WebkitMaskSize: `100% 100%, ${innerSize} ${innerSize}`,
-    WebkitMaskPosition: "center, center",
-    WebkitMaskRepeat: "no-repeat, no-repeat",
-    WebkitMaskComposite: "xor",
-  }
+  useEffect(() => {
+    let cancelled = false
+    extractContour(src).then((pts) => {
+      if (!cancelled && pts.length >= 3) setContour(pts)
+    })
+    return () => { cancelled = true }
+  }, [src])
+
+  if (!contour) return null
+
+  const pointsStr = contour.map(([x, y]) => `${x},${y}`).join(" ")
 
   return (
     <div
@@ -92,22 +86,35 @@ function TraceOverlay({
         pointerEvents: "none",
         opacity: active ? 1 : 0,
         transition,
-        filter: `drop-shadow(0 0 ${width}px ${color})`,
       }}
     >
-      <div style={edgeMaskStyle}>
-        {/* Narrow beam (~10% arc from 85%→95%) rotating from center.
-            inset:-50% expands the disc so the gradient reaches all edges. */}
-        <div
+      <svg
+        viewBox="0 0 1 1"
+        preserveAspectRatio="none"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          overflow: "visible",
+          filter: `drop-shadow(0 0 ${width}px ${color})`,
+        }}
+      >
+        <polygon
+          points={pointsStr}
+          fill="rgba(255, 255, 255, 0.03)"
+          stroke={color}
+          strokeWidth={width * 0.0015}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          strokeDasharray="0.15 0.85"
+          pathLength={1}
           style={{
-            position: "absolute",
-            inset: "-50%",
-            background: `conic-gradient(from 0deg at 50% 50%, transparent 0%, transparent 85%, ${color} 92%, ${color} 95%, transparent 100%)`,
-            borderRadius: "50%",
-            animation: `_ricut-trace-rotate ${duration}s linear infinite`,
+            transition,
+            animation: `_ricut-trace-stroke ${duration}s linear infinite`,
           }}
         />
-      </div>
+      </svg>
     </div>
   )
 }
