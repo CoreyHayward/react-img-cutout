@@ -96,6 +96,8 @@ function TraceOverlay({
       }}
     >
       <div style={edgeMaskStyle}>
+        {/* Narrow beam (~10% arc from 85%→95%) rotating from center.
+            inset:-50% expands the disc so the gradient reaches all edges. */}
         <div
           style={{
             position: "absolute",
