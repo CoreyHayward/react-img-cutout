@@ -31,15 +31,18 @@ const PLACEMENTS: Placement[] = [
   "bottom-right",
 ]
 
-type DemoMode = "image" | "bbox" | "polygon" | "renderLayer" | "mixed" | "draw"
+type DemoMode = "image" | "bbox" | "polygon" | "circle" | "renderLayer" | "mixed" | "draw" | "drawRect" | "drawCircle"
 
 const DEMO_MODES: { value: DemoMode; label: string }[] = [
   { value: "image", label: "Image Cutouts" },
   { value: "bbox", label: "BBox Cutouts" },
   { value: "polygon", label: "Polygon Cutouts" },
+  { value: "circle", label: "Circle Cutouts" },
   { value: "renderLayer", label: "Custom renderLayer" },
   { value: "mixed", label: "Mixed (All Types)" },
   { value: "draw", label: "Draw Polygon" },
+  { value: "drawRect", label: "Draw Rectangle" },
+  { value: "drawCircle", label: "Draw Circle" },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -59,6 +62,12 @@ export function App() {
   // Drawn polygon regions (draw mode)
   const [drawnRegions, setDrawnRegions] = useState<[number, number][][]>([])
   const [drawEnabled, setDrawEnabled] = useState(true)
+
+  // Drawn rectangles (drawRect mode)
+  const [drawnRects, setDrawnRects] = useState<{ x: number; y: number; w: number; h: number }[]>([])
+
+  // Drawn circles (drawCircle mode)
+  const [drawnCircles, setDrawnCircles] = useState<{ center: { x: number; y: number }; radius: number }[]>([])
 
   // Event log
   const [log, setLog] = useState<string[]>([])
@@ -146,6 +155,22 @@ export function App() {
                     </CutoutViewer.Overlay>
                   )}
                 </CutoutViewer.PolygonCutout>
+              )}
+
+              {/* Circle cutouts */}
+              {(demoMode === "circle" || demoMode === "mixed") && (
+                <CutoutViewer.CircleCutout
+                  id="center-circle"
+                  center={{ x: 0.5, y: 0.4 }}
+                  radius={0.18}
+                  label="Center Circle"
+                >
+                  {showOverlays && (
+                    <CutoutViewer.Overlay placement={overlayPlacement}>
+                      <OverlayTag>Circle Region</OverlayTag>
+                    </CutoutViewer.Overlay>
+                  )}
+                </CutoutViewer.CircleCutout>
               )}
 
               {/* renderLayer — custom SVG renderer */}
@@ -247,6 +272,59 @@ export function App() {
                         </CutoutViewer.Overlay>
                       )}
                     </CutoutViewer.PolygonCutout>
+                  ))}
+                </>
+              )}
+
+              {/* Draw rectangle mode */}
+              {demoMode === "drawRect" && (
+                <>
+                  <CutoutViewer.DrawRectangle
+                    enabled={drawEnabled}
+                    onComplete={(bounds) =>
+                      setDrawnRects((prev) => [...prev, bounds])
+                    }
+                  />
+                  {drawnRects.map((bounds, i) => (
+                    <CutoutViewer.BBoxCutout
+                      key={i}
+                      id={`rect-${i}`}
+                      bounds={bounds}
+                      label={`Rect ${i + 1}`}
+                    >
+                      {showOverlays && (
+                        <CutoutViewer.Overlay placement={overlayPlacement}>
+                          <OverlayTag>Rect {i + 1}</OverlayTag>
+                        </CutoutViewer.Overlay>
+                      )}
+                    </CutoutViewer.BBoxCutout>
+                  ))}
+                </>
+              )}
+
+              {/* Draw circle mode */}
+              {demoMode === "drawCircle" && (
+                <>
+                  <CutoutViewer.DrawCircle
+                    enabled={drawEnabled}
+                    onComplete={(circle) =>
+                      setDrawnCircles((prev) => [...prev, circle])
+                    }
+                  />
+                  {drawnCircles.map((circle, i) => (
+                    <CutoutViewer.CircleCutout
+                      key={i}
+                      id={`circle-${i}`}
+                      center={circle.center}
+                      radius={circle.radius}
+                      label={`Circle ${i + 1}`}
+                    >
+                      {showOverlays && (
+                        <CutoutViewer.Overlay placement={overlayPlacement}>
+                          <OverlayTag>Circle {i + 1}</OverlayTag>
+                        </CutoutViewer.Overlay>
+                      )}
+                    </CutoutViewer.CircleCutout>
                   ))}
                 </>
               )}
@@ -364,7 +442,7 @@ export function App() {
             </Field>
 
             {/* Draw mode: controls */}
-            {demoMode === "draw" && (
+            {(demoMode === "draw" || demoMode === "drawRect" || demoMode === "drawCircle") && (
               <Field label="Drawing enabled">
                 <Toggle checked={drawEnabled} onChange={setDrawEnabled} />
               </Field>
@@ -382,6 +460,30 @@ export function App() {
               </Field>
             )}
 
+            {/* DrawRect mode: clear button */}
+            {demoMode === "drawRect" && drawnRects.length > 0 && (
+              <Field label={`Drawn rectangles: ${drawnRects.length}`}>
+                <button
+                  onClick={() => setDrawnRects([])}
+                  className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-neutral-500 hover:text-neutral-200"
+                >
+                  Clear rectangles
+                </button>
+              </Field>
+            )}
+
+            {/* DrawCircle mode: clear button */}
+            {demoMode === "drawCircle" && drawnCircles.length > 0 && (
+              <Field label={`Drawn circles: ${drawnCircles.length}`}>
+                <button
+                  onClick={() => setDrawnCircles([])}
+                  className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-neutral-500 hover:text-neutral-200"
+                >
+                  Clear circles
+                </button>
+              </Field>
+            )}
+
             {/* Reset */}
             <button
               onClick={() => {
@@ -393,6 +495,8 @@ export function App() {
                 setAlphaThreshold(30)
                 setDemoMode("image")
                 setDrawnRegions([])
+                setDrawnRects([])
+                setDrawnCircles([])
                 setDrawEnabled(true)
                 setLog([])
               }}
@@ -434,6 +538,18 @@ export function App() {
     id="lake"
     points={[[0.1, 0.7], [0.4, 0.65], [0.5, 0.85], [0.05, 0.9]]}
     label="Lake"
+  />
+</CutoutViewer>`}</Code>
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-medium text-neutral-200">Circle cutout</h3>
+            <Code>{`<CutoutViewer mainImage="/photo.png">
+  <CutoutViewer.CircleCutout
+    id="spotlight"
+    center={{ x: 0.5, y: 0.4 }}
+    radius={0.18}
+    label="Spotlight"
   />
 </CutoutViewer>`}</Code>
           </div>
@@ -513,6 +629,47 @@ const [drawing, setDrawing] = useState(true)
           </div>
 
           <div>
+            <h3 className="mb-1 font-medium text-neutral-200">Draw rectangle</h3>
+            <Code>{`const [rects, setRects] = useState<{ x: number; y: number; w: number; h: number }[]>([])
+
+<CutoutViewer mainImage="/photo.png">
+  <CutoutViewer.DrawRectangle
+    onComplete={(bounds) => setRects((prev) => [...prev, bounds])}
+    strokeColor="#3b82f6"
+  />
+  {rects.map((bounds, i) => (
+    <CutoutViewer.BBoxCutout key={i} id={\`rect-\${i}\`} bounds={bounds} />
+  ))}
+</CutoutViewer>`}</Code>
+            <p className="mt-2 text-xs text-neutral-500">
+              Interactions: <strong className="text-neutral-400">drag</strong> — draw rectangle &nbsp;·&nbsp;
+              <strong className="text-neutral-400">release</strong> — complete &nbsp;·&nbsp;
+              <strong className="text-neutral-400">Esc</strong> — cancel
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-medium text-neutral-200">Draw circle</h3>
+            <Code>{`const [circles, setCircles] = useState<{ center: { x: number; y: number }; radius: number }[]>([])
+
+<CutoutViewer mainImage="/photo.png">
+  <CutoutViewer.DrawCircle
+    onComplete={(circle) => setCircles((prev) => [...prev, circle])}
+    strokeColor="#3b82f6"
+  />
+  {circles.map((c, i) => (
+    <CutoutViewer.CircleCutout key={i} id={\`circle-\${i}\`} center={c.center} radius={c.radius} />
+  ))}
+</CutoutViewer>`}</Code>
+            <p className="mt-2 text-xs text-neutral-500">
+              Interactions: <strong className="text-neutral-400">click</strong> — set center &nbsp;·&nbsp;
+              <strong className="text-neutral-400">drag outward</strong> — set radius &nbsp;·&nbsp;
+              <strong className="text-neutral-400">release</strong> — complete &nbsp;·&nbsp;
+              <strong className="text-neutral-400">Esc</strong> — cancel
+            </p>
+          </div>
+
+          <div>
             <h3 className="mb-1 font-medium text-neutral-200">Props</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -564,6 +721,11 @@ const [drawing, setDrawing] = useState(true)
                     <td className="py-1.5 pr-4 font-mono text-blue-400">PolygonCutout</td>
                     <td className="py-1.5 pr-4 font-mono text-neutral-500">id, points [[x,y]...], label, renderLayer?</td>
                     <td className="py-1.5">Ray-cast point-in-polygon</td>
+                  </tr>
+                  <tr className="border-b border-neutral-800/50">
+                    <td className="py-1.5 pr-4 font-mono text-blue-400">CircleCutout</td>
+                    <td className="py-1.5 pr-4 font-mono text-neutral-500">{"id, center {x,y}, radius, label, renderLayer?"}</td>
+                    <td className="py-1.5">Euclidean distance (dx²+dy²≤r²)</td>
                   </tr>
                 </tbody>
               </table>

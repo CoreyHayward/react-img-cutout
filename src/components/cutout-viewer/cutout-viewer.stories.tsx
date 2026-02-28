@@ -951,3 +951,202 @@ export const DrawPolygonStory: Story = {
     },
   },
 }
+
+// 21. CircleCutout
+
+export const CircleCutoutStory: Story = {
+  name: "Circle Cutout",
+  render: (args) => (
+    <CutoutViewer {...args}>
+      <CutoutViewer.CircleCutout
+        id="spotlight"
+        center={{ x: 0.5, y: 0.4 }}
+        radius={0.18}
+        label="Spotlight"
+      >
+        <CutoutViewer.Overlay placement="bottom-center">
+          <Tag>Circle Region</Tag>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.CircleCutout>
+      <CutoutViewer.Cutout {...CUTOUTS.woman} />
+      <CutoutViewer.Cutout {...CUTOUTS.man} />
+    </CutoutViewer>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`<CutoutViewer.CircleCutout>` defines a circular region using a normalized 0-1 " +
+          "`center` point and `radius`. Hit testing uses a simple Euclidean distance check " +
+          "(`dx²+dy² ≤ r²`). The default renderer draws an SVG ellipse.",
+      },
+    },
+  },
+}
+
+// 22. DrawRectangle — click-and-drag to define bbox regions
+
+export const DrawRectangleStory: Story = {
+  name: "Draw Rectangle",
+  render: (args) => {
+    const [rects, setRects] = useState<{ x: number; y: number; w: number; h: number }[]>([])
+    const [drawEnabled, setDrawEnabled] = useState(true)
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <CutoutViewer {...args}>
+          <DefaultChildren />
+
+          <CutoutViewer.DrawRectangle
+            enabled={drawEnabled}
+            onComplete={(bounds) =>
+              setRects((prev) => [...prev, bounds])
+            }
+          />
+
+          {rects.map((bounds, i) => (
+            <CutoutViewer.BBoxCutout
+              key={i}
+              id={`rect-${i}`}
+              bounds={bounds}
+              label={`Rect ${i + 1}`}
+            />
+          ))}
+        </CutoutViewer>
+
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setDrawEnabled((v) => !v)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: `1px solid ${drawEnabled ? "rgba(59,130,246,0.5)" : "rgba(255,255,255,0.15)"}`,
+              background: drawEnabled ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
+              color: drawEnabled ? "#93c5fd" : "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Drawing: {drawEnabled ? "on" : "off"}
+          </button>
+          <button
+            onClick={() => setRects([])}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.05)",
+              color: "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Clear rectangles ({rects.length})
+          </button>
+          <span style={{ fontSize: "12px", color: "#6b7280" }}>
+            Click and drag to draw · release to complete · Esc to cancel
+          </span>
+        </div>
+      </div>
+    )
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`<CutoutViewer.DrawRectangle>` adds a click-and-drag drawing layer. The user " +
+          "presses down to anchor the first corner, drags to preview the rectangle in real " +
+          "time, and releases to complete it. The output `{ x, y, w, h }` matches " +
+          "`BBoxCutoutProps.bounds` exactly — no conversion needed.\n\n" +
+          "**Controls:**\n" +
+          "- **Drag** — draw rectangle (origin/size always normalized)\n" +
+          "- **Release** — complete\n" +
+          "- **Esc** — cancel",
+      },
+    },
+  },
+}
+
+// 23. DrawCircle — click-and-drag to define circular regions
+
+export const DrawCircleStory: Story = {
+  name: "Draw Circle",
+  render: (args) => {
+    const [circles, setCircles] = useState<{ center: { x: number; y: number }; radius: number }[]>([])
+    const [drawEnabled, setDrawEnabled] = useState(true)
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <CutoutViewer {...args}>
+          <DefaultChildren />
+
+          <CutoutViewer.DrawCircle
+            enabled={drawEnabled}
+            onComplete={(circle) =>
+              setCircles((prev) => [...prev, circle])
+            }
+          />
+
+          {circles.map((c, i) => (
+            <CutoutViewer.CircleCutout
+              key={i}
+              id={`circle-${i}`}
+              center={c.center}
+              radius={c.radius}
+              label={`Circle ${i + 1}`}
+            />
+          ))}
+        </CutoutViewer>
+
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setDrawEnabled((v) => !v)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: `1px solid ${drawEnabled ? "rgba(59,130,246,0.5)" : "rgba(255,255,255,0.15)"}`,
+              background: drawEnabled ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
+              color: drawEnabled ? "#93c5fd" : "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Drawing: {drawEnabled ? "on" : "off"}
+          </button>
+          <button
+            onClick={() => setCircles([])}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.05)",
+              color: "#e5e7eb",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            Clear circles ({circles.length})
+          </button>
+          <span style={{ fontSize: "12px", color: "#6b7280" }}>
+            Click to set center · drag outward to set radius · release to complete · Esc to cancel
+          </span>
+        </div>
+      </div>
+    )
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`<CutoutViewer.DrawCircle>` adds a click-and-drag drawing layer for circles. " +
+          "The pointer-down position becomes the center; dragging outward sets the radius " +
+          "as the Euclidean distance to the cursor. The output `{ center, radius }` matches " +
+          "`CircleCutoutProps` exactly — no conversion needed.\n\n" +
+          "**Controls:**\n" +
+          "- **Drag** — set center (pointer-down) and radius (drag distance)\n" +
+          "- **Release** — complete\n" +
+          "- **Esc** — cancel",
+      },
+    },
+  },
+}
