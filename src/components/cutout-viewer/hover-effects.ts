@@ -92,7 +92,7 @@ export function ensureEffectKeyframes(effect: HoverEffect): void {
  * the cutout shape, then animates a rotating conic-gradient through them.
  */
 export interface TraceConfig {
-  /** Thickness of the visible edge border in CSS pixels (default: `4`). */
+  /** Thickness of the visible edge border in CSS pixels (default: `6`). */
   width?: number
   /**
    * Duration of one full revolution in seconds (default: `3`).
