@@ -44,7 +44,7 @@ export interface CutoutProps {
  * Renders the animated trace overlay for image-based cutouts.
  *
  * Uses a CSS mask compositing trick to extract only the border pixels of
- * the cutout silhouette, then sweeps a radial-gradient spotlight around
+ * the cutout silhouette, then rotates a narrow conic-gradient beam through
  * them — replicating the stroke-dasharray animation used on geometric
  * shapes (bbox / polygon).
  */
@@ -99,11 +99,10 @@ function TraceOverlay({
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            backgroundImage: `radial-gradient(circle, ${color} 0%, transparent 45%)`,
-            backgroundSize: "45% 45%",
-            backgroundRepeat: "no-repeat",
-            animation: `_ricut-trace-sweep ${duration}s linear infinite`,
+            inset: "-50%",
+            background: `conic-gradient(from 0deg at 50% 50%, transparent 0%, transparent 85%, ${color} 92%, ${color} 95%, transparent 100%)`,
+            borderRadius: "50%",
+            animation: `_ricut-trace-rotate ${duration}s linear infinite`,
           }}
         />
       </div>
