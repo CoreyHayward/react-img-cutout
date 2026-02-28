@@ -89,7 +89,7 @@ export function ensureEffectKeyframes(effect: HoverEffect): void {
  * replicating the stroke-dash trace effect used on geometric shapes.
  *
  * The overlay uses CSS mask compositing to extract only the border pixels of
- * the cutout shape, then animates a rotating conic-gradient through them.
+ * the cutout shape, then sweeps a radial-gradient spotlight around them.
  */
 export interface TraceConfig {
   /** Thickness of the visible edge border in CSS pixels (default: `6`). */
@@ -400,23 +400,34 @@ const traceStrokeKeyframes = defineKeyframes(
    to   { stroke-dashoffset: -1; }`
 )
 
-/** Rotates the conic-gradient disc used by the image cutout trace overlay. */
-const traceRotateKeyframes = defineKeyframes(
-  "_ricut-trace-rotate",
-  `from { transform: rotate(0deg); }
-   to   { transform: rotate(360deg); }`
+/**
+ * Moves a radial-gradient spotlight clockwise around the perimeter of the
+ * image cutout, tracing the silhouette edge one section at a time.
+ * Eight stops approximate a smooth circular orbit.
+ */
+const traceSweepKeyframes = defineKeyframes(
+  "_ricut-trace-sweep",
+  `0%    { background-position: 50% -20%; }
+   12.5% { background-position: 110% -10%; }
+   25%   { background-position: 120% 50%; }
+   37.5% { background-position: 110% 110%; }
+   50%   { background-position: 50% 120%; }
+   62.5% { background-position: -10% 110%; }
+   75%   { background-position: -20% 50%; }
+   87.5% { background-position: -10% -10%; }
+   100%  { background-position: 50% -20%; }`
 )
 
 /**
  * Trace effect — a short white dash endlessly travels around the cutout
- * border, tracing its outline. For image-based cutouts a bright arc sweeps
- * around the silhouette edge using a CSS-mask + rotating conic-gradient
+ * border, tracing its outline. For image-based cutouts a radial-gradient
+ * spotlight sweeps clockwise around the silhouette edge using a CSS-mask
  * overlay, closely matching the stroke-dash animation on geometric shapes.
  */
 export const traceEffect: HoverEffect = {
   name: "trace",
   transition: SPRING,
-  keyframes: [traceStrokeKeyframes, traceRotateKeyframes],
+  keyframes: [traceStrokeKeyframes, traceSweepKeyframes],
   traceConfig: {
     width: 6,
     duration: 3,
