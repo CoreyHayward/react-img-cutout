@@ -977,8 +977,9 @@ export const CircleCutoutStory: Story = {
       description: {
         story:
           "`<CutoutViewer.CircleCutout>` defines a circular region using a normalized 0-1 " +
-          "`center` point and `radius`. Hit testing uses a simple Euclidean distance check " +
-          "(`dx²+dy² ≤ r²`). The default renderer draws an SVG ellipse.",
+          "`center` point and `radius`, where radius is measured against the viewer's " +
+          "minimum dimension. Hit testing and rendering preserve a true on-screen circle " +
+          "across non-square layouts.",
       },
     },
   },
@@ -1140,7 +1141,8 @@ export const DrawCircleStory: Story = {
         story:
           "`<CutoutViewer.DrawCircle>` adds a click-and-drag drawing layer for circles. " +
           "The pointer-down position becomes the center; dragging outward sets the radius " +
-          "as the Euclidean distance to the cursor. The output `{ center, radius }` matches " +
+          "from Euclidean pixel distance to the cursor, normalized by the viewer's minimum " +
+          "dimension. The output `{ center, radius }` matches " +
           "`CircleCutoutProps` exactly — no conversion needed.\n\n" +
           "**Controls:**\n" +
           "- **Drag** — set center (pointer-down) and radius (drag distance)\n" +

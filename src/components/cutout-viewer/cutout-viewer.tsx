@@ -144,7 +144,7 @@ function CutoutViewerBase({
   }, [cutoutMap])
 
   /* --- Hit testing ------------------------------------------------ */
-  const { activeId, selectedId, hoveredId, boundsMap, containerRef, containerProps } =
+  const { activeId, selectedId, hoveredId, viewportSize, boundsMap, containerRef, containerProps } =
     useCutoutHitTest(definitions, enabled, alphaThreshold, hoverLeaveDelay)
 
   /* --- Callbacks via useEffect (correct ref-based approach) ------- */
@@ -181,13 +181,14 @@ function CutoutViewerBase({
       activeId,
       selectedId,
       hoveredId,
+      viewportSize,
       effect: resolvedEffect,
       enabled,
       showAll,
       boundsMap,
       isAnyActive,
     }),
-    [activeId, selectedId, hoveredId, resolvedEffect, enabled, showAll, boundsMap, isAnyActive]
+    [activeId, selectedId, hoveredId, viewportSize, resolvedEffect, enabled, showAll, boundsMap, isAnyActive]
   )
 
   return (

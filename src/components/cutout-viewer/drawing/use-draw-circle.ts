@@ -12,6 +12,8 @@ export interface UseDrawCircleOptions {
 export interface UseDrawCircleReturn {
   /** The in-progress circle, or null when not dragging */
   circle: { center: { x: number; y: number }; radius: number } | null
+  /** Current drawing viewport size in pixels */
+  viewportSize: { width: number; height: number }
   /** True while the user is dragging */
   isDragging: boolean
   /** Reset (cancel) the current in-progress drawing */
@@ -33,7 +35,26 @@ export function useDrawCircle({
 }: UseDrawCircleOptions): UseDrawCircleReturn {
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null)
   const [circle, setCircle] = useState<{ center: { x: number; y: number }; radius: number } | null>(null)
+  const [viewportSize, setViewportSize] = useState({ width: 1, height: 1 })
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const syncSize = () => {
+      const rect = el.getBoundingClientRect()
+      setViewportSize({
+        width: Math.max(1, rect.width),
+        height: Math.max(1, rect.height),
+      })
+    }
+
+    syncSize()
+    const observer = new ResizeObserver(syncSize)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const getNormalized = useCallback(
     (clientX: number, clientY: number): { x: number; y: number } | null => {
@@ -48,6 +69,17 @@ export function useDrawCircle({
       }
     },
     []
+  )
+
+  const getRadiusFromNormalized = useCallback(
+    (pos: { x: number; y: number }, centerPos: { x: number; y: number }) => {
+      const dxPx = (pos.x - centerPos.x) * viewportSize.width
+      const dyPx = (pos.y - centerPos.y) * viewportSize.height
+      const radiusPx = Math.sqrt(dxPx * dxPx + dyPx * dyPx)
+      const minDimension = Math.min(viewportSize.width, viewportSize.height)
+      return radiusPx / minDimension
+    },
+    [viewportSize.height, viewportSize.width]
   )
 
   const reset = useCallback(() => {
@@ -80,12 +112,10 @@ export function useDrawCircle({
       if (!center) return
       const pos = getNormalized(e.clientX, e.clientY)
       if (!pos) return
-      const dx = pos.x - center.x
-      const dy = pos.y - center.y
-      const radius = Math.sqrt(dx * dx + dy * dy)
+      const radius = getRadiusFromNormalized(pos, center)
       setCircle({ center, radius })
     },
-    [center, getNormalized]
+    [center, getNormalized, getRadiusFromNormalized]
   )
 
   const handlePointerUp = useCallback(
@@ -93,9 +123,7 @@ export function useDrawCircle({
       if (!center) return
       const pos = getNormalized(e.clientX, e.clientY)
       if (pos) {
-        const dx = pos.x - center.x
-        const dy = pos.y - center.y
-        const radius = Math.sqrt(dx * dx + dy * dy)
+        const radius = getRadiusFromNormalized(pos, center)
         if (radius >= minRadius) {
           onComplete({ center, radius })
         }
@@ -103,7 +131,7 @@ export function useDrawCircle({
       setCenter(null)
       setCircle(null)
     },
-    [center, getNormalized, minRadius, onComplete]
+    [center, getNormalized, getRadiusFromNormalized, minRadius, onComplete]
   )
 
   const handlePointerLeave = useCallback(() => {
@@ -112,6 +140,7 @@ export function useDrawCircle({
 
   return {
     circle,
+    viewportSize,
     isDragging: center !== null,
     reset,
     containerRef,

@@ -29,7 +29,7 @@ export interface CircleCutoutProps {
   id: string
   /** Normalized 0-1 center coordinate */
   center: { x: number; y: number }
-  /** Normalized 0-1 radius */
+  /** Normalized 0-1 radius as a fraction of min(viewerWidth, viewerHeight) */
   radius: number
   /** Human-readable label */
   label?: string
@@ -80,6 +80,11 @@ export function CircleCutout({
 
   const defaultBounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
   const bounds = viewer.boundsMap[id] ?? defaultBounds
+  const safeWidth = Math.max(1, viewer.viewportSize.width)
+  const safeHeight = Math.max(1, viewer.viewportSize.height)
+  const minDimension = Math.min(safeWidth, safeHeight)
+  const rx = (defRadius * minDimension) / safeWidth
+  const ry = (defRadius * minDimension) / safeHeight
 
   // For geometry cutouts, use geometry-specific styles and strip the wrapper
   // filter (drop-shadow doesn't produce good visuals on geometric shapes).
@@ -154,8 +159,8 @@ export function CircleCutout({
               <ellipse
                 cx={defCenter.x}
                 cy={defCenter.y}
-                rx={defRadius}
-                ry={defRadius}
+                rx={rx}
+                ry={ry}
                 fill={geo.fill}
                 stroke={geo.stroke}
                 strokeWidth={(geo.strokeWidth ?? 2) * 0.0015}

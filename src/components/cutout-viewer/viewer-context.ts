@@ -14,6 +14,7 @@ export interface CutoutViewerContextValue {
   activeId: string | null
   selectedId: string | null
   hoveredId: string | null
+  viewportSize: { width: number; height: number }
   effect: HoverEffect
   enabled: boolean
   showAll: boolean

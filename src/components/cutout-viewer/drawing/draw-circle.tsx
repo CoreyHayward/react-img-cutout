@@ -56,10 +56,14 @@ export function DrawCircle({
     )
   }
 
-  const { circle, reset, containerRef, containerProps } = useDrawCircle({
+  const { circle, viewportSize, reset, containerRef, containerProps } = useDrawCircle({
     onComplete,
     minRadius,
   })
+
+  const safeWidth = Math.max(1, viewportSize.width)
+  const safeHeight = Math.max(1, viewportSize.height)
+  const minDimension = Math.min(safeWidth, safeHeight)
 
   // Clear any in-progress drawing when drawing is disabled
   useEffect(() => {
@@ -97,8 +101,8 @@ export function DrawCircle({
           <ellipse
             cx={circle.center.x}
             cy={circle.center.y}
-            rx={circle.radius}
-            ry={circle.radius}
+            rx={(circle.radius * minDimension) / safeWidth}
+            ry={(circle.radius * minDimension) / safeHeight}
             fill={strokeColor}
             fillOpacity={0.15}
             stroke={strokeColor}
