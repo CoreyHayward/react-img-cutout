@@ -3,6 +3,7 @@
 import { ImageHitTestStrategy } from "./cutouts/image/image-hit-test-strategy"
 import { RectHitTestStrategy } from "./cutouts/bbox/bbox-hit-test-strategy"
 import { PolygonHitTestStrategy } from "./cutouts/polygon/polygon-hit-test-strategy"
+import { CircleHitTestStrategy } from "./cutouts/circle/circle-hit-test-strategy"
 
 /**
  * Normalized bounding box (0-1 range) of the opaque pixels in a cutout.
@@ -44,10 +45,19 @@ export interface PolygonCutoutDefinition extends BaseCutoutDefinition {
   points: [number, number][]
 }
 
+export interface CircleCutoutDefinition extends BaseCutoutDefinition {
+  type: "circle"
+  /** Normalized 0-1 center coordinate */
+  center: { x: number; y: number }
+  /** Normalized 0-1 radius as a fraction of min(viewerWidth, viewerHeight) */
+  radius: number
+}
+
 export type CutoutDefinition =
   | ImageCutoutDefinition
   | BoundingBoxCutoutDefinition
   | PolygonCutoutDefinition
+  | CircleCutoutDefinition
 
 // Hit-test strategy interface
 
@@ -69,10 +79,17 @@ export interface HitTestStrategy {
 export { ImageHitTestStrategy } from "./cutouts/image/image-hit-test-strategy"
 export { RectHitTestStrategy } from "./cutouts/bbox/bbox-hit-test-strategy"
 export { PolygonHitTestStrategy } from "./cutouts/polygon/polygon-hit-test-strategy"
+export { CircleHitTestStrategy } from "./cutouts/circle/circle-hit-test-strategy"
+
+export interface HitTestViewportOptions {
+  viewportWidth?: number
+  viewportHeight?: number
+}
 
 export function createHitTestStrategy(
   def: CutoutDefinition,
-  alphaThreshold: number
+  alphaThreshold: number,
+  options?: HitTestViewportOptions
 ): HitTestStrategy {
   switch (def.type) {
     case "image":
@@ -81,5 +98,7 @@ export function createHitTestStrategy(
       return new RectHitTestStrategy(def)
     case "polygon":
       return new PolygonHitTestStrategy(def)
+    case "circle":
+      return new CircleHitTestStrategy(def, options?.viewportWidth, options?.viewportHeight)
   }
 }

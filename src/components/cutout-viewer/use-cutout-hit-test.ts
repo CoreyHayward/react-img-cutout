@@ -16,6 +16,7 @@ export type {
   ImageCutoutDefinition,
   BoundingBoxCutoutDefinition,
   PolygonCutoutDefinition,
+  CircleCutoutDefinition,
   HitTestStrategy,
 } from "./hit-test-strategy"
 
@@ -35,6 +36,8 @@ function serializeDefinition(def: CutoutDefinition): string {
       return `${def.id}:bbox:${def.bounds.x},${def.bounds.y},${def.bounds.w},${def.bounds.h}:${def.label ?? ""}`
     case "polygon":
       return `${def.id}:polygon:${def.points.flat().join(",")}:${def.label ?? ""}`
+    case "circle":
+      return `${def.id}:circle:${def.center.x},${def.center.y},${def.radius}:${def.label ?? ""}`
   }
 }
 
@@ -57,6 +60,7 @@ export function useCutoutHitTest(
   const containerRef = useRef<HTMLDivElement>(null)
   const strategiesRef = useRef<HitTestStrategy[]>([])
   const [boundsMap, setBoundsMap] = useState<Record<string, CutoutBounds>>({})
+  const [viewportSize, setViewportSize] = useState({ width: 1, height: 1 })
   const [contourMap, setContourMap] = useState<Record<string, [number, number][]>>({})
   const clampThreshold = Math.min(255, Math.max(0, alphaThreshold))
 
@@ -82,6 +86,25 @@ export function useCutoutHitTest(
   const definitionsKey = definitions.map(serializeDefinition).join("|")
   const stableDefinitions = useMemo(() => definitions, [definitionsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Track current container size so hit-test strategies can account for aspect ratio.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const syncSize = () => {
+      const rect = container.getBoundingClientRect()
+      setViewportSize({
+        width: Math.max(1, rect.width),
+        height: Math.max(1, rect.height),
+      })
+    }
+
+    syncSize()
+    const observer = new ResizeObserver(syncSize)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+
   // Build hit-test strategies + bounding boxes for each cutout
   useEffect(() => {
     if (!enabled) {
@@ -98,7 +121,10 @@ export function useCutoutHitTest(
       const newContourMap: Record<string, [number, number][]> = {}
 
       for (const def of stableDefinitions) {
-        const strategy = createHitTestStrategy(def, clampThreshold)
+        const strategy = createHitTestStrategy(def, clampThreshold, {
+          viewportWidth: viewportSize.width,
+          viewportHeight: viewportSize.height,
+        })
         if (strategy.prepare) {
           await strategy.prepare()
         }
@@ -126,7 +152,7 @@ export function useCutoutHitTest(
         s.dispose?.()
       }
     }
-  }, [stableDefinitions, enabled, clampThreshold])
+  }, [stableDefinitions, enabled, clampThreshold, viewportSize.width, viewportSize.height])
 
   /** Check which cutout (if any) is under a normalized (0-1) position */
   const hitTestAt = useCallback(
@@ -218,6 +244,7 @@ export function useCutoutHitTest(
     hoveredId,
     selectedId,
     activeId,
+    viewportSize,
     boundsMap: effectiveBoundsMap,
     contourMap: effectiveContourMap,
     containerRef,

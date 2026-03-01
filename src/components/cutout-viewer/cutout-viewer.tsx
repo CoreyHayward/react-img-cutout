@@ -28,8 +28,11 @@ import {
 import { Cutout } from "./cutouts/image/cutout"
 import { BBoxCutout } from "./cutouts/bbox/bbox-cutout"
 import { PolygonCutout } from "./cutouts/polygon/polygon-cutout"
+import { CircleCutout } from "./cutouts/circle/circle-cutout"
 import { CutoutOverlay } from "./cutouts/cutout-overlay"
 import { DrawPolygon } from "./drawing/draw-polygon"
+import { DrawRectangle } from "./drawing/draw-rectangle"
+import { DrawCircle } from "./drawing/draw-circle"
 
 function serializeDefinition(def: CutoutDefinition): string {
   switch (def.type) {
@@ -39,6 +42,8 @@ function serializeDefinition(def: CutoutDefinition): string {
       return `bbox:${def.bounds.x},${def.bounds.y},${def.bounds.w},${def.bounds.h}:${def.label ?? ""}`
     case "polygon":
       return `polygon:${def.points.flat().join(",")}:${def.label ?? ""}`
+    case "circle":
+      return `circle:${def.center.x},${def.center.y},${def.radius}:${def.label ?? ""}`
   }
 }
 
@@ -139,7 +144,7 @@ function CutoutViewerBase({
   }, [cutoutMap])
 
   /* --- Hit testing ------------------------------------------------ */
-  const { activeId, selectedId, hoveredId, boundsMap, contourMap, containerRef, containerProps } =
+  const { activeId, selectedId, hoveredId, viewportSize, boundsMap, contourMap, containerRef, containerProps } =
     useCutoutHitTest(definitions, enabled, alphaThreshold, hoverLeaveDelay)
 
   /* --- Callbacks via useEffect (correct ref-based approach) ------- */
@@ -176,6 +181,7 @@ function CutoutViewerBase({
       activeId,
       selectedId,
       hoveredId,
+      viewportSize,
       effect: resolvedEffect,
       enabled,
       showAll,
@@ -183,7 +189,7 @@ function CutoutViewerBase({
       contourMap,
       isAnyActive,
     }),
-    [activeId, selectedId, hoveredId, resolvedEffect, enabled, showAll, boundsMap, contourMap, isAnyActive]
+    [activeId, selectedId, hoveredId, viewportSize, resolvedEffect, enabled, showAll, boundsMap, contourMap, isAnyActive]
   )
 
   return (
@@ -244,8 +250,11 @@ type CutoutViewerComponent = ((props: CutoutViewerProps) => ReactElement) & {
   Cutout: typeof Cutout
   BBoxCutout: typeof BBoxCutout
   PolygonCutout: typeof PolygonCutout
+  CircleCutout: typeof CircleCutout
   Overlay: typeof CutoutOverlay
   DrawPolygon: typeof DrawPolygon
+  DrawRectangle: typeof DrawRectangle
+  DrawCircle: typeof DrawCircle
 }
 
 export const CutoutViewer = CutoutViewerBase as CutoutViewerComponent
@@ -253,5 +262,8 @@ export const CutoutViewer = CutoutViewerBase as CutoutViewerComponent
 CutoutViewer.Cutout = Cutout
 CutoutViewer.BBoxCutout = BBoxCutout
 CutoutViewer.PolygonCutout = PolygonCutout
+CutoutViewer.CircleCutout = CircleCutout
 CutoutViewer.Overlay = CutoutOverlay
 CutoutViewer.DrawPolygon = DrawPolygon
+CutoutViewer.DrawRectangle = DrawRectangle
+CutoutViewer.DrawCircle = DrawCircle

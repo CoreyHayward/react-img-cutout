@@ -16,6 +16,7 @@ import {
 } from "../../hover-effects"
 import { CutoutContext, type CutoutContextValue } from "../cutout-context"
 import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
+import { contourToSmoothPath } from "./alpha-contour"
 
 export interface RenderLayerProps {
   isActive: boolean
@@ -63,6 +64,15 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
 
   /* --- Extract contour from pre-computed hit-test data ------------- */
   const contour = viewer.contourMap[id] ?? null
+
+  /* --- Build smooth SVG path from contour, scaled to viewport px --- */
+  const contourPath = useMemo(() => {
+    if (!contour) return null
+    const vw = viewer.viewportSize.width || 1
+    const vh = viewer.viewportSize.height || 1
+    const scaled: [number, number][] = contour.map(([x, y]) => [x * vw, y * vh])
+    return contourToSmoothPath(scaled)
+  }, [contour, viewer.viewportSize.width, viewer.viewportSize.height])
 
   /* --- Compute state ---------------------------------------------- */
   const isActive = viewer.activeId === id
@@ -128,10 +138,10 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
             />
           )}
 
-        {/* SVG polygon trace — uses the same geometry styles as bbox/polygon cutouts */}
-        {contour && geometryStyle && (
+        {/* SVG path trace — smooth Catmull-Rom curves with pixel-based viewBox */}
+        {contourPath && geometryStyle && (
           <svg
-            viewBox="0 0 1 1"
+            viewBox={`0 0 ${viewer.viewportSize.width || 1} ${viewer.viewportSize.height || 1}`}
             preserveAspectRatio="none"
             style={{
               position: "absolute",
@@ -144,11 +154,11 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
                 : "none",
             }}
           >
-            <polygon
-              points={contour.map(([x, y]) => `${x},${y}`).join(" ")}
+            <path
+              d={contourPath}
               fill={geometryStyle.fill}
               stroke={geometryStyle.stroke}
-              strokeWidth={(geometryStyle.strokeWidth ?? 2) * 0.0015}
+              strokeWidth={geometryStyle.strokeWidth ?? 2}
               strokeLinejoin="round"
               strokeLinecap={geometryStyle.strokeDasharray ? "round" : undefined}
               strokeDasharray={geometryStyle.strokeDasharray}
