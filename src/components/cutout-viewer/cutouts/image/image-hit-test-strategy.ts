@@ -5,6 +5,7 @@ import type {
   HitTestStrategy,
   ImageCutoutDefinition,
 } from "../../hit-test-strategy"
+import { traceContour } from "./alpha-contour"
 
 /**
  * Extracts just the alpha (opacity) channel from raw RGBA pixel data.
@@ -109,6 +110,7 @@ function computeBoundsFromAlpha(
 export class ImageHitTestStrategy implements HitTestStrategy {
   id: string
   bounds: CutoutBounds = { x: 0, y: 0, w: 1, h: 1 }
+  contour: [number, number][] = []
 
   /** URL of the cutout mask image */
   private src: string
@@ -168,6 +170,7 @@ export class ImageHitTestStrategy implements HitTestStrategy {
       this.width = w
       this.height = h
       this.bounds = computeBoundsFromAlpha(this.alpha, w, h, this.threshold)
+      this.contour = traceContour(this.alpha, w, h, this.threshold)
     } catch {
       // CORS-tainted canvas — leave bounds as full image fallback
       this.alpha = new Uint8Array(0)

@@ -68,6 +68,8 @@ export interface HitTestStrategy {
   hitTest(nx: number, ny: number): boolean
   /** Pre-computed bounding box (normalized 0-1) */
   bounds: CutoutBounds
+  /** Pre-computed contour polygon (normalized 0-1), if available */
+  contour?: [number, number][]
   /** Optional async setup (e.g., image loading) */
   prepare?(): Promise<void>
   /** Cleanup */
