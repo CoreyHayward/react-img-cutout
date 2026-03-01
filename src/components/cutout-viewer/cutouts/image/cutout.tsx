@@ -2,9 +2,8 @@
 
 import {
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useEffect,
   type ReactNode,
   type CSSProperties,
 } from "react"
@@ -17,7 +16,6 @@ import {
 } from "../../hover-effects"
 import { CutoutContext, type CutoutContextValue } from "../cutout-context"
 import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
-import { extractContour } from "./alpha-contour"
 
 export interface RenderLayerProps {
   isActive: boolean
@@ -63,18 +61,8 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
       : effectOverride
     : viewer.effect
 
-  /* --- Extract contour for geometry overlay ----------------------- */
-  const hasGeometry = !!resolvedEffect.geometryActive
-  const [contour, setContour] = useState<[number, number][] | null>(null)
-
-  useEffect(() => {
-    if (!hasGeometry) return
-    let cancelled = false
-    extractContour(src).then((pts) => {
-      if (!cancelled && pts.length >= 3) setContour(pts)
-    })
-    return () => { cancelled = true }
-  }, [src, hasGeometry])
+  /* --- Extract contour from pre-computed hit-test data ------------- */
+  const contour = viewer.contourMap[id] ?? null
 
   /* --- Compute state ---------------------------------------------- */
   const isActive = viewer.activeId === id

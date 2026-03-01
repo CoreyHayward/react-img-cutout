@@ -1,12 +1,12 @@
 /**
- * Extracts a simplified polygon outline from an image's alpha channel.
+ * Contour-tracing utilities for extracting polygon outlines from alpha data.
  *
  * Used by the trace effect to render image cutouts with the same SVG
  * stroke-dasharray animation that geometric shapes use.
  *
  * Pipeline:
- * 1. Load image → draw on offscreen canvas → read alpha channel
- * 2. Downscale to a working resolution for performance
+ * 1. Downscale alpha buffer to a working resolution for performance
+ * 2. Build binary grid from alpha threshold
  * 3. Trace the outer boundary using Moore-Neighbor contour tracing
  * 4. Simplify with Ramer–Douglas–Peucker
  * 5. Return normalized [0-1] coordinate pairs
@@ -132,74 +132,53 @@ function mooreTrace(
 }
 
 /**
- * Load an image and extract a simplified polygon contour from its alpha
- * channel.  Returns normalized [0-1] coordinate pairs suitable for use
- * as SVG polygon points.
+ * Extract a simplified polygon contour from a pre-computed alpha buffer.
  *
- * @param src            Image URL (same-origin or CORS-enabled)
+ * Accepts the alpha data already extracted by the hit-test strategy,
+ * avoiding a redundant image load.
+ *
+ * @param alpha          Compact alpha buffer (one byte per pixel)
+ * @param srcW           Source image width in pixels
+ * @param srcH           Source image height in pixels
  * @param alphaThreshold Minimum alpha value (0-255) to consider opaque
  * @param epsilon        RDP simplification tolerance in normalized coords
  *                       (default: 0.003 — roughly 0.3 % of image size)
  */
-export async function extractContour(
-  src: string,
+export function traceContour(
+  alpha: Uint8Array,
+  srcW: number,
+  srcH: number,
   alphaThreshold = 30,
   epsilon = 0.003
-): Promise<[number, number][]> {
-  // --- Load image ------------------------------------------------
-  const img = new Image()
-  img.crossOrigin = "anonymous"
-  img.src = src
-  await new Promise<void>((resolve) => {
-    img.onload = () => resolve()
-    img.onerror = () => resolve()
-  })
+): [number, number][] {
+  if (srcW <= 0 || srcH <= 0 || alpha.length === 0) return []
 
-  const natW = img.naturalWidth
-  const natH = img.naturalHeight
-  if (natW <= 0 || natH <= 0) return []
+  // --- Downscale to work resolution --------------------------------
+  const scale = Math.min(1, WORK_SIZE / Math.max(srcW, srcH))
+  const w = Math.max(1, Math.round(srcW * scale))
+  const h = Math.max(1, Math.round(srcH * scale))
 
-  // --- Downscale to work resolution ------------------------------
-  const scale = Math.min(1, WORK_SIZE / Math.max(natW, natH))
-  const w = Math.max(1, Math.round(natW * scale))
-  const h = Math.max(1, Math.round(natH * scale))
-
-  const canvas = document.createElement("canvas")
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext("2d", { willReadFrequently: true })
-  if (!ctx) return []
-
-  try {
-    ctx.drawImage(img, 0, 0, w, h)
-  } catch {
-    return [] // CORS-tainted
-  }
-
-  let data: Uint8ClampedArray
-  try {
-    data = ctx.getImageData(0, 0, w, h).data
-  } catch {
-    return [] // CORS-tainted
-  }
-
-  // --- Binary grid from alpha ------------------------------------
+  // --- Binary grid from alpha (with nearest-neighbor downscale) -----
   const grid = new Uint8Array(w * h)
-  for (let i = 0; i < w * h; i++) {
-    grid[i] = data[i * 4 + 3] > alphaThreshold ? 1 : 0
+  for (let y = 0; y < h; y++) {
+    const srcY = Math.min(srcH - 1, Math.floor(y / scale))
+    for (let x = 0; x < w; x++) {
+      const srcX = Math.min(srcW - 1, Math.floor(x / scale))
+      grid[y * w + x] = alpha[srcY * srcW + srcX] > alphaThreshold ? 1 : 0
+    }
   }
 
-  // --- Trace outer contour ---------------------------------------
+  // --- Trace outer contour -----------------------------------------
   const raw = mooreTrace(grid, w, h)
   if (raw.length < 3) return []
 
-  // --- Normalize to 0-1 ------------------------------------------
+  // --- Normalize to 0-1 --------------------------------------------
   const normalized: [number, number][] = raw.map(([x, y]) => [
     (x + 0.5) / w,
     (y + 0.5) / h,
   ])
 
-  // --- Simplify ---------------------------------------------------
+  // --- Simplify -----------------------------------------------------
   const simplified = rdpSimplify(normalized, epsilon)
   return simplified.length >= 3 ? simplified : normalized
 }

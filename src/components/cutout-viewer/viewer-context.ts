@@ -18,6 +18,7 @@ export interface CutoutViewerContextValue {
   enabled: boolean
   showAll: boolean
   boundsMap: Record<string, CutoutBounds>
+  contourMap: Record<string, [number, number][]>
   isAnyActive: boolean
 }
 

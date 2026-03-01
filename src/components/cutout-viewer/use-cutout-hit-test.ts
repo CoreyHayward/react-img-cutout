@@ -57,6 +57,7 @@ export function useCutoutHitTest(
   const containerRef = useRef<HTMLDivElement>(null)
   const strategiesRef = useRef<HitTestStrategy[]>([])
   const [boundsMap, setBoundsMap] = useState<Record<string, CutoutBounds>>({})
+  const [contourMap, setContourMap] = useState<Record<string, [number, number][]>>({})
   const clampThreshold = Math.min(255, Math.max(0, alphaThreshold))
 
   const hoverClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -94,6 +95,7 @@ export function useCutoutHitTest(
     async function buildStrategies() {
       const strategies: HitTestStrategy[] = []
       const newBoundsMap: Record<string, CutoutBounds> = {}
+      const newContourMap: Record<string, [number, number][]> = {}
 
       for (const def of stableDefinitions) {
         const strategy = createHitTestStrategy(def, clampThreshold)
@@ -104,12 +106,16 @@ export function useCutoutHitTest(
 
         strategies.push(strategy)
         newBoundsMap[strategy.id] = strategy.bounds
+        if (strategy.contour && strategy.contour.length >= 3) {
+          newContourMap[strategy.id] = strategy.contour
+        }
       }
 
       if (!cancelled) {
         builtStrategies = strategies
         strategiesRef.current = strategies
         setBoundsMap(newBoundsMap)
+        setContourMap(newContourMap)
       }
     }
 
@@ -203,6 +209,7 @@ export function useCutoutHitTest(
   // The "active" id is the selected one if set, otherwise the hovered one
   const activeId = selectedId ?? hoveredId
   const effectiveBoundsMap = enabled ? boundsMap : {}
+  const effectiveContourMap = enabled ? contourMap : {}
 
   // Clean up any pending hover-clear timer on unmount
   useEffect(() => () => { cancelHoverClear() }, [cancelHoverClear])
@@ -212,6 +219,7 @@ export function useCutoutHitTest(
     selectedId,
     activeId,
     boundsMap: effectiveBoundsMap,
+    contourMap: effectiveContourMap,
     containerRef,
     containerProps: {
       onPointerMove: handlePointerMove,
