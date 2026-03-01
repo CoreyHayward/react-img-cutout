@@ -2,8 +2,8 @@
 
 import {
   useContext,
-  useEffect,
   useMemo,
+  useEffect,
   type ReactNode,
   type CSSProperties,
 } from "react"
@@ -12,6 +12,7 @@ import {
   hoverEffects,
   type HoverEffect,
   type HoverEffectPreset,
+  type GeometryStyle,
 } from "../../hover-effects"
 import { CutoutContext, type CutoutContextValue } from "../cutout-context"
 import { CutoutRegistryContext, useCutoutViewerContext } from "../../viewer-context"
@@ -60,6 +61,9 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
       : effectOverride
     : viewer.effect
 
+  /* --- Extract contour from pre-computed hit-test data ------------- */
+  const contour = viewer.contourMap[id] ?? null
+
   /* --- Compute state ---------------------------------------------- */
   const isActive = viewer.activeId === id
   const isHovered = viewer.hoveredId === id
@@ -69,12 +73,16 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
   const bounds = viewer.boundsMap[id] ?? defaultBounds
 
   let layerStyle: CSSProperties
+  let geometryStyle: GeometryStyle | undefined
   if (!viewer.enabled || (!viewer.isAnyActive && !viewer.showAll)) {
     layerStyle = resolvedEffect.cutoutIdle
+    geometryStyle = resolvedEffect.geometryIdle
   } else if (viewer.showAll || isActive) {
     layerStyle = resolvedEffect.cutoutActive
+    geometryStyle = resolvedEffect.geometryActive
   } else {
     layerStyle = resolvedEffect.cutoutInactive
+    geometryStyle = resolvedEffect.geometryInactive
   }
 
   const cutoutCtx: CutoutContextValue = useMemo(
@@ -119,6 +127,39 @@ export function Cutout({ id, src, label, effect: effectOverride, children, rende
               }}
             />
           )}
+
+        {/* SVG polygon trace — uses the same geometry styles as bbox/polygon cutouts */}
+        {contour && geometryStyle && (
+          <svg
+            viewBox="0 0 1 1"
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+              filter: geometryStyle.glow
+                ? `drop-shadow(${geometryStyle.glow.split(",")[0]?.trim() ?? ""})`
+                : "none",
+            }}
+          >
+            <polygon
+              points={contour.map(([x, y]) => `${x},${y}`).join(" ")}
+              fill={geometryStyle.fill}
+              stroke={geometryStyle.stroke}
+              strokeWidth={(geometryStyle.strokeWidth ?? 2) * 0.0015}
+              strokeLinejoin="round"
+              strokeLinecap={geometryStyle.strokeDasharray ? "round" : undefined}
+              strokeDasharray={geometryStyle.strokeDasharray}
+              pathLength={geometryStyle.strokeDasharray ? 1 : undefined}
+              style={{
+                transition: resolvedEffect.transition,
+                animation: geometryStyle.animation,
+              }}
+            />
+          </svg>
+        )}
       </div>
 
       {/* Children (overlay content) rendered on top */}

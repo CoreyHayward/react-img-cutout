@@ -370,25 +370,16 @@ const traceStrokeKeyframes = defineKeyframes(
    to   { stroke-dashoffset: -1; }`
 )
 
-/** Sweeps a white drop-shadow highlight around image-based cutout edges. */
-const traceGlowKeyframes = defineKeyframes(
-  "_ricut-trace-glow",
-  `0%   { filter: drop-shadow(-3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   25%  { filter: drop-shadow(3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   50%  { filter: drop-shadow(3px 3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   75%  { filter: drop-shadow(-3px 3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }
-   100% { filter: drop-shadow(-3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15)); }`
-)
-
 /**
  * Trace effect — a short white dash endlessly travels around the cutout
- * border, tracing its outline. For image-based cutouts a white drop-shadow
- * highlight sweeps around the silhouette edge.
+ * border, tracing its outline. For image-based cutouts, the alpha channel
+ * is converted to a polygon outline and rendered with the same SVG
+ * stroke-dasharray animation used on geometric shapes.
  */
 export const traceEffect: HoverEffect = {
   name: "trace",
   transition: SPRING,
-  keyframes: [traceStrokeKeyframes, traceGlowKeyframes],
+  keyframes: [traceStrokeKeyframes],
   mainImageHovered: {
     filter: "brightness(0.35) saturate(0.5)",
   },
@@ -398,9 +389,8 @@ export const traceEffect: HoverEffect = {
   },
   cutoutActive: {
     transform: "scale(1)",
-    filter: "drop-shadow(-3px -3px 6px rgba(255,255,255,0.6)) drop-shadow(0 0 2px rgba(255,255,255,0.15))",
+    filter: "drop-shadow(0 0 8px rgba(255,255,255,0.15))",
     opacity: 1,
-    animation: `${traceGlowKeyframes.name} 3s linear infinite`,
   },
   cutoutInactive: {
     transform: "scale(1)",
