@@ -210,7 +210,7 @@ export const elevateEffect: HoverEffect = {
   geometryActive: {
     fill: "rgba(130, 190, 255, 0.2)",
     stroke: "rgba(130, 190, 255, 0.9)",
-    strokeWidth: 2,
+    strokeWidth: 0,
     glow: "0 0 24px rgba(130, 190, 255, 0.5), 0 0 56px rgba(130, 190, 255, 0.2), 0 12px 40px rgba(0, 0, 0, 0.4)",
   },
   geometryInactive: {
@@ -257,7 +257,7 @@ export const glowEffect: HoverEffect = {
   geometryActive: {
     fill: "rgba(255, 200, 100, 0.15)",
     stroke: "rgba(255, 200, 100, 0.85)",
-    strokeWidth: 2,
+    strokeWidth: 0,
     glow: "0 0 20px rgba(255, 200, 100, 0.5), 0 0 56px rgba(255, 200, 100, 0.2)",
   },
   geometryInactive: {
@@ -302,7 +302,7 @@ export const liftEffect: HoverEffect = {
   geometryActive: {
     fill: "rgba(255, 255, 255, 0.1)",
     stroke: "rgba(255, 255, 255, 0.7)",
-    strokeWidth: 2,
+    strokeWidth: 0,
     glow: "0 20px 56px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 255, 255, 0.1)",
   },
   geometryInactive: {
@@ -347,7 +347,7 @@ export const subtleEffect: HoverEffect = {
   geometryActive: {
     fill: "rgba(255, 255, 255, 0.08)",
     stroke: "rgba(255, 255, 255, 0.5)",
-    strokeWidth: 1,
+    strokeWidth: 0,
   },
   geometryInactive: {
     fill: "transparent",
@@ -405,7 +405,7 @@ export const traceEffect: HoverEffect = {
   geometryActive: {
     fill: "rgba(255, 255, 255, 0.03)",
     stroke: "rgba(255, 255, 255, 0.9)",
-    strokeWidth: 2.5,
+    strokeWidth: 2,
     strokeDasharray: "0.15 0.85",
     animation: `${traceStrokeKeyframes.name} 3s linear infinite`,
     glow: "0 0 10px rgba(255, 255, 255, 0.25)",
@@ -485,7 +485,7 @@ export const shimmerEffect: HoverEffect = {
   geometryActive: {
     fill: "rgba(255, 255, 255, 0.1)",
     stroke: "rgba(255, 255, 255, 0.7)",
-    strokeWidth: 2,
+    strokeWidth: 0,
     glow: "0 0 14px rgba(255, 255, 255, 0.35), 0 12px 32px rgba(0, 0, 0, 0.4)",
   },
   geometryInactive: {
