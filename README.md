@@ -1,4 +1,5 @@
 # react-img-cutout
+[![npm version](https://img.shields.io/npm/v/react-img-cutout.svg)](https://www.npmjs.com/package/react-img-cutout)
 
 `react-img-cutout` provides a simple, composable component for creating interactive image regions. 
 It enables pixel-perfect interaction using transparent PNG cutouts, while also supporting standard bounding boxes and polygons for geometric shapes. 
