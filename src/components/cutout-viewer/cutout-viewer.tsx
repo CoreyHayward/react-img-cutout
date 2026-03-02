@@ -58,6 +58,8 @@ export interface CutoutViewerProps {
   enabled?: boolean
   /** When true, all cutouts show their active/hovered state simultaneously */
   showAll?: boolean
+  /** When true, forces all overlays to be visible regardless of hover or selected state (default: false) */
+  showOverlays?: boolean
   /** Minimum alpha value 0-255 for pixel hit-testing (default: 30) */
   alphaThreshold?: number
   /** Delay in ms before the hover state clears after leaving a cutout (default: 150) */
@@ -85,6 +87,7 @@ function CutoutViewerBase({
   effect: effectProp = "elevate",
   enabled = true,
   showAll = false,
+  showOverlays = false,
   alphaThreshold = 30,
   hoverLeaveDelay = 150,
   children,
@@ -185,11 +188,12 @@ function CutoutViewerBase({
       effect: resolvedEffect,
       enabled,
       showAll,
+      showOverlays,
       boundsMap,
       contourMap,
       isAnyActive,
     }),
-    [activeId, selectedId, hoveredId, viewportSize, resolvedEffect, enabled, showAll, boundsMap, contourMap, isAnyActive]
+    [activeId, selectedId, hoveredId, viewportSize, resolvedEffect, enabled, showAll, showOverlays, boundsMap, contourMap, isAnyActive]
   )
 
   return (

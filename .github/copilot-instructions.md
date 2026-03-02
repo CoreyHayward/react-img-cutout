@@ -141,6 +141,11 @@ All component files and the library entry point start with `"use client"` for Ne
 
 Always guard canvas/DOM access: `if (typeof document === "undefined") return`. The `"use client"` directive prevents execution on the server in RSC environments, but guards add safety for other SSR setups.
 
+## Making Changes
+When making any changes to the library ensure that the public API is considered and updated accordingly.
+
+- Always update the demo app and Storybook stories with any new features or changes to existing features.
+
 ## Adding a New Cutout Type
 
 1. Add a new definition interface extending `BaseCutoutDefinition` in `hit-test-strategy.ts` and add it to the `CutoutDefinition` union.

@@ -18,6 +18,7 @@ export interface CutoutViewerContextValue {
   effect: HoverEffect
   enabled: boolean
   showAll: boolean
+  showOverlays: boolean
   boundsMap: Record<string, CutoutBounds>
   contourMap: Record<string, [number, number][]>
   isAnyActive: boolean

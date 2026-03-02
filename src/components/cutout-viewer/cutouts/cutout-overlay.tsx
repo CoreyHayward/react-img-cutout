@@ -80,6 +80,8 @@ export interface CutoutOverlayProps {
   className?: string
   /** Additional inline styles (merged after placement styles) */
   style?: CSSProperties
+  /** When true, forces the overlay to be visible regardless of hover or selected state. This overrides the CutoutViewer's `showOverlays` setting if set. */
+  showOverlay?: boolean
 }
 
 /**
@@ -99,6 +101,7 @@ export function CutoutOverlay({
   children,
   className = "",
   style,
+  showOverlay = undefined,
 }: CutoutOverlayProps) {
   const cutoutCtx = useContext(CutoutContext)
   const viewer = useCutoutViewerContext()
@@ -109,8 +112,10 @@ export function CutoutOverlay({
     )
   }
 
+  const showOverlayOverride = showOverlay ?? viewer.showOverlays
+
   const isVisible =
-    viewer.enabled && (viewer.showAll || cutoutCtx.isActive)
+    viewer.enabled && (viewer.showAll || showOverlayOverride || cutoutCtx.isActive)
 
   const placementStyle = getPlacementStyle(placement, cutoutCtx.bounds)
 

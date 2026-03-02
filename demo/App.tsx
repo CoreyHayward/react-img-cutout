@@ -407,7 +407,7 @@ export function App() {
             </Field>
 
             {/* Overlays toggle */}
-            <Field label="Show overlays">
+            <Field label="Enable overlays">
               <Toggle checked={showOverlays} onChange={setShowOverlays} />
             </Field>
 
@@ -583,6 +583,25 @@ export function App() {
     </CutoutViewer.Overlay>
   </CutoutViewer.Cutout>
 </CutoutViewer>`}</Code>
+            <p className="mt-2 text-xs text-neutral-500">
+              Use <code className="text-neutral-400">showOverlays</code> on <code className="text-neutral-400">{"<CutoutViewer>"}</code> to force all overlays visible at once, or <code className="text-neutral-400">showOverlay</code> on an individual <code className="text-neutral-400">{"<CutoutViewer.Overlay>"}</code> to override visibility for that overlay only.
+            </p>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-neutral-800 text-neutral-500">
+                    <th className="pb-2 pr-4 font-medium">Prop</th>
+                    <th className="pb-2 pr-4 font-medium">Type</th>
+                    <th className="pb-2 pr-4 font-medium">Default</th>
+                    <th className="pb-2 font-medium">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="text-neutral-400">
+                  <PropRow prop="placement" type="Placement" def='"top-center"' desc="Position relative to the cutout's bounding box" />
+                  <PropRow prop="showOverlay" type="boolean" def="undefined" desc="Force this overlay visible regardless of hover/selected state. Overrides the viewer-level showOverlays when set." />
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div>
@@ -686,6 +705,7 @@ const [drawing, setDrawing] = useState(true)
                   <PropRow prop="effect" type='"elevate" | "glow" | "lift" | "subtle" | "trace" | HoverEffect' def='"apple"' desc="Hover effect preset or custom object" />
                   <PropRow prop="enabled" type="boolean" def="true" desc="Toggle hover interactions" />
                   <PropRow prop="showAll" type="boolean" def="false" desc="Force all cutouts into active state" />
+                  <PropRow prop="showOverlays" type="boolean" def="false" desc="Force all overlays visible regardless of hover or selected state" />
                   <PropRow prop="alphaThreshold" type="number (0-255)" def="30" desc="Min alpha for pixel hit-testing" />
                   <PropRow prop="onHover" type="(id: string | null) => void" def="—" desc="Fires when hover changes" />
                   <PropRow prop="onSelect" type="(id: string | null) => void" def="—" desc="Fires on click selection" />
