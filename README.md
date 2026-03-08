@@ -247,6 +247,166 @@ return (
 - Click locks selection; clicking empty space clears selection.
 - Overlays are positioned from normalized cutout bounds using one of 9 placements.
 
+## Using with AI Image Segmentation Models
+
+`react-img-cutout` is designed to work seamlessly with the outputs of AI segmentation models such as [SAM (Segment Anything Model)](https://github.com/facebookresearch/segment-anything), [SAM 2](https://github.com/facebookresearch/segment-anything-2), and other vision models (e.g. Mask R-CNN, YOLOv8-seg, GroundingDINO). These models can produce three types of output, all of which map directly to a cutout type in this library.
+
+### Output type → Cutout type mapping
+
+| Model output | Cutout type | Notes |
+|---|---|---|
+| Segmentation mask / transparent PNG | `CutoutViewer.Cutout` | Pixel-perfect alpha hit-testing |
+| Polygon contour / boundary points | `CutoutViewer.PolygonCutout` | Ray-casting hit-testing |
+| Bounding box `[x, y, w, h]` | `CutoutViewer.BBoxCutout` | Axis-aligned rectangle |
+
+> **Coordinate normalization**: All coordinates in `react-img-cutout` are expressed as fractions of the viewer's rendered width/height (0–1). Divide pixel values by the original image's `width` and `height` before passing them to any cutout prop.
+
+### Example: SAM polygon contours → `PolygonCutout`
+
+SAM and SAM 2 can return contour boundary points for each detected mask. After converting pixel coordinates to normalized 0–1 values, pass them directly to `CutoutViewer.PolygonCutout`.
+
+```tsx
+import { CutoutViewer } from "react-img-cutout"
+
+// Example output from a SAM-based API (pixel coordinates, image is 800 × 600)
+const samSegments = [
+  {
+    id: "person-1",
+    label: "Person",
+    // Polygon contour points returned by SAM / SAM 2 (pixel space)
+    contour: [[120, 80], [200, 75], [250, 150], [210, 300], [130, 290], [100, 200]],
+  },
+  {
+    id: "object-2",
+    label: "Backpack",
+    contour: [[310, 180], [370, 170], [390, 260], [320, 275]],
+  },
+]
+
+const IMAGE_WIDTH = 800
+const IMAGE_HEIGHT = 600
+
+// Normalize pixel coordinates to 0–1 range
+function normalizePoints(points: number[][]): [number, number][] {
+  return points.map(([x, y]) => [x / IMAGE_WIDTH, y / IMAGE_HEIGHT])
+}
+
+export function SegmentationViewer() {
+  return (
+    <CutoutViewer mainImage="/photo.jpg" effect="glow">
+      {samSegments.map((seg) => (
+        <CutoutViewer.PolygonCutout
+          key={seg.id}
+          id={seg.id}
+          label={seg.label}
+          points={normalizePoints(seg.contour)}
+        >
+          <CutoutViewer.Overlay placement="top-center">
+            <span>{seg.label}</span>
+          </CutoutViewer.Overlay>
+        </CutoutViewer.PolygonCutout>
+      ))}
+    </CutoutViewer>
+  )
+}
+```
+
+### Example: SAM mask image → `CutoutViewer.Cutout`
+
+When a segmentation model returns a binary mask or a transparent PNG (for example, a SAM mask exported as a PNG with an alpha channel), use `CutoutViewer.Cutout` for pixel-perfect hit-testing.
+
+```tsx
+import { CutoutViewer } from "react-img-cutout"
+
+// maskUrl is a transparent PNG where the segmented region is opaque
+// and the rest of the image is fully transparent — exactly what SAM exports.
+const maskUrl = "/api/sam/masks/person-1.png"
+
+export function MaskViewer() {
+  return (
+    <CutoutViewer mainImage="/photo.jpg" effect="elevate">
+      <CutoutViewer.Cutout id="person-1" src={maskUrl} label="Person">
+        <CutoutViewer.Overlay placement="top-center">
+          <button>View details</button>
+        </CutoutViewer.Overlay>
+      </CutoutViewer.Cutout>
+    </CutoutViewer>
+  )
+}
+```
+
+### Example: Object-detection bounding boxes → `BBoxCutout`
+
+Models that return bounding boxes (YOLO, Faster R-CNN, DETR, etc.) map directly to `CutoutViewer.BBoxCutout`.
+
+```tsx
+import { CutoutViewer } from "react-img-cutout"
+
+// Bounding boxes returned by an object-detection model (pixel space, image 1280 × 720)
+const detections = [
+  { id: "car-1",  label: "Car",    bbox: { x: 100, y: 200, w: 300, h: 150 } },
+  { id: "sign-1", label: "Sign",   bbox: { x: 600, y: 80,  w: 80,  h: 100 } },
+]
+
+const W = 1280, H = 720
+
+export function DetectionViewer() {
+  return (
+    <CutoutViewer mainImage="/street.jpg" effect="subtle">
+      {detections.map(({ id, label, bbox }) => (
+        <CutoutViewer.BBoxCutout
+          key={id}
+          id={id}
+          label={label}
+          bounds={{
+            x: bbox.x / W,
+            y: bbox.y / H,
+            w: bbox.w / W,
+            h: bbox.h / H,
+          }}
+        >
+          <CutoutViewer.Overlay placement="top-center">
+            <span>{label}</span>
+          </CutoutViewer.Overlay>
+        </CutoutViewer.BBoxCutout>
+      ))}
+    </CutoutViewer>
+  )
+}
+```
+
+### Example: Interactive annotation with `DrawPolygon`
+
+Use `CutoutViewer.DrawPolygon` to let users correct or extend AI-generated segmentation masks directly in the browser. The completed polygon is returned in the same normalized coordinate format used throughout the library, so it can be sent back to a model for refinement or stored as-is.
+
+```tsx
+import { useState } from "react"
+import { CutoutViewer } from "react-img-cutout"
+
+export function AnnotationTool() {
+  const [regions, setRegions] = useState<{ id: string; points: [number, number][] }[]>([])
+
+  return (
+    <CutoutViewer mainImage="/photo.jpg" effect="trace">
+      {/* Render existing AI-generated segments */}
+      {regions.map((r) => (
+        <CutoutViewer.PolygonCutout key={r.id} id={r.id} points={r.points} />
+      ))}
+
+      {/* Let the user draw additional / corrected regions */}
+      <CutoutViewer.DrawPolygon
+        onComplete={(points) =>
+          setRegions((prev) => [
+            ...prev,
+            { id: `region-${prev.length}`, points },
+          ])
+        }
+      />
+    </CutoutViewer>
+  )
+}
+```
+
 ## Important Implementation Notes
 
 - Use transparent PNG/WebP cutouts aligned to the same coordinate space as `mainImage`.
